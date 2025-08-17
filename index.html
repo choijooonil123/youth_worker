@@ -5,251 +5,125 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>청소년지도사 면접 연습 시스템</title>
   <style>
-    :root{
-      --bg:#0b1020;--panel:#10183a;--ink:#eaf0ff;--muted:#a7b3d4;--brand:#6aa6ff;--accent:#a176ff;--ok:#4cd97b;--danger:#ff6a6a;
-    }
-    *{box-sizing:border-box}
-    body{margin:0;font-family:ui-sans-serif,system-ui,Apple SD Gothic Neo,Noto Sans KR,Segoe UI,Roboto,sans-serif;color:var(--ink);background:radial-gradient(1200px 800px at 80% -10%,#1a2650 0%,#0b1020 45%)}
-    header{padding:18px 20px 10px;display:flex;gap:10px;align-items:center}
+    body{margin:0;font-family:ui-sans-serif,system-ui,Apple SD Gothic Neo,Noto Sans KR,Segoe UI,Roboto,sans-serif;background:#f6f8fa;color:#222}
+    header{padding:16px;display:flex;gap:10px;align-items:center;background:#1976d2;color:#fff}
     header h1{margin:0;font-size:18px}
-    .pill{border:1px solid #28376e;border-radius:999px;color:var(--muted);padding:6px 10px;font-size:12px}
-
-    .wrap{max-width:1200px;margin:0 auto;padding:10px 16px 40px}
-    .panel{border:1px solid #263062;border-radius:16px;background:linear-gradient(180deg,rgba(255,255,255,.03),rgba(255,255,255,0));box-shadow:0 10px 40px rgba(0,0,0,.35)}
-    .toolbar{display:flex;gap:10px;align-items:center;padding:14px;border-bottom:1px solid #283162}
-    .toolbar .btn{border:1px solid #2b3769;background:#16214a;color:var(--ink);padding:8px 12px;border-radius:10px;cursor:pointer;font-weight:700}
-    .toolbar .btn:hover{background:#1a2a56}
-    .toolbar .stat{color:var(--muted);font-size:13px}
-
-    .grid{display:grid;gap:12px;padding:16px;grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
-    .col{background:var(--panel);border:1px solid #202a59;border-radius:14px;overflow:hidden}
-    .col h3{margin:0;padding:12px 14px;background:linear-gradient(180deg,#1a2552,transparent);border-bottom:1px solid #202a59;font-size:15px}
-    .qbtn{display:block;width:100%;text-align:left;background:#0f1633;border:1px solid #1f2a5a;border-radius:12px;color:var(--ink);padding:12px;margin:10px;cursor:pointer;font-size:14px;line-height:1.35}
-    .qbtn:hover{background:#121b3e}
-
-    dialog{width:min(920px,96vw);background:#0c122a;border:1px solid #243064;border-radius:16px;color:var(--ink)}
-    dialog::backdrop{background:rgba(0,10,30,.6);backdrop-filter:blur(3px)}
-    .dlg{padding:16px;display:flex;flex-direction:column;gap:12px}
-    .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-    .btn{border:1px solid #304080;background:#15204a;color:var(--ink);padding:10px 12px;border-radius:12px;cursor:pointer;font-weight:700}
-    .btn[disabled]{opacity:.5;cursor:not-allowed}
-    .btn.primary{background:linear-gradient(180deg,#1f3d92,#1a2c6d);border-color:#2f47a8}
-    .btn.ok{background:#123b2a;border-color:#0d5b3a}
-    .btn.danger{background:#3a1330;border-color:#7a244f}
-    .answer-box{background:#0b1330;border:1px solid #212c5c;border-radius:14px;padding:12px;min-height:56px;white-space:pre-wrap}
-    .score{font-size:36px;font-weight:800}
+    .wrap{max-width:900px;margin:20px auto;padding:10px}
+    select{padding:6px 10px;border-radius:6px;font-size:15px}
+    .qbtn{display:block;width:100%;text-align:left;padding:10px;margin:6px 0;background:#1976d2;color:#fff;border:none;border-radius:6px;cursor:pointer}
+    .qbtn:hover{background:#125ea6}
+    dialog{width:min(700px,95vw);border:none;border-radius:10px;padding:20px}
+    .row{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
+    .btn{padding:8px 12px;border-radius:6px;cursor:pointer;border:none}
+    .btn.primary{background:#1976d2;color:#fff}
+    .btn.ok{background:#2e7d32;color:#fff}
+    .btn.danger{background:#c62828;color:#fff}
+    .answer-box{background:#f0f0f0;padding:10px;border-radius:6px;min-height:40px;white-space:pre-wrap}
+    .score{font-size:24px;font-weight:bold;margin-top:10px}
   </style>
 </head>
 <body>
   <header>
-    <div class="pill">청소년지도사 면접 대비</div>
-    <h1>질문 버튼 · 과목별 열 배치 · 음성녹음 · 자동 유사도</h1>
+    <h1>청소년지도사 면접 연습</h1>
   </header>
-
   <div class="wrap">
-    <div class="panel">
-      <div class="toolbar">
-        <button id="resetProgress" class="btn">진행도 초기화</button>
-        <span id="statText" class="stat"></span>
-      </div>
-      <div id="grid" class="grid"></div>
+    <div>
+      <label>과목 선택: <select id="subjectSelect"></select></label>
     </div>
+    <div id="qList"></div>
   </div>
 
-  <!-- 문제 다이얼로그 -->
   <dialog id="qd">
-    <div class="dlg">
-      <h2 id="qTitle">질문</h2>
-      <div class="row">
-        <button id="speakBtn" class="btn">🔊 질문 다시듣기</button>
-        <button id="recordBtn" class="btn">🎤 답변녹음</button>
-        <button id="submitBtn" class="btn primary" disabled>✅ 답변제출</button>
-        <button id="learnedBtn" class="btn ok">📌 습득완료</button>
-        <button id="closeBtn" class="btn danger">❌ 닫기</button>
-      </div>
-      <div>
-        <div class="answer-box" id="userAnswer"></div>
-      </div>
-      <div id="result"></div>
+    <h2 id="qTitle">질문</h2>
+    <div class="row">
+      <button id="speakBtn" class="btn">🔊 질문듣기</button>
+      <button id="recordBtn" class="btn">🎤 답변녹음</button>
+      <button id="submitBtn" class="btn primary" disabled>✅ 제출</button>
+      <button id="learnedBtn" class="btn ok">📌 습득완료</button>
+      <button id="closeBtn" class="btn danger">닫기</button>
     </div>
+    <div id="userAnswer" class="answer-box"></div>
+    <div id="result"></div>
   </dialog>
 
   <script>
-  // ===== 전역 상태 =====
-  let raw = [];
-  let data = [];// 렌더링용(인덱스 유지)
-  let practiceCount = 0; // 총 3회 제한
-  let currentIdx = null; // 현재 문제 인덱스
-  let mediaRecorder, audioChunks = [];
-  let recognizing = false;
+  let raw=[], data=[], currentIdx=null, practiceCount=0;
 
-  // ===== 데이터 로딩 =====
   async function loadData(){
-    try{
-      const r = await fetch('youth_quiz_data.json',{cache:'no-store'});
-      raw = await r.json();
-    }catch(e){
-      // 업로드 JSON에 subject가 없을 수 있으므로 fallback subject 없이 사용
-      console.warn('데이터 로드 실패, 빈 배열 사용', e);
-      raw = [];
-    }
-    // 렌더용 복제
-    data = raw.map((x,i)=>({ ...x, _idx:i }));
-    renderGrid();
-    updateStat();
+    const r=await fetch('youth_quiz_data.json',{cache:'no-store'});
+    raw=await r.json();
+    data=raw.map((x,i)=>({...x,_idx:i}));
+    renderSubjects();
   }
 
-  // ===== 그리드 렌더: 과목(subject)=열, question=버튼(행) =====
-  function renderGrid(){
-    const grid = document.getElementById('grid');
-    grid.innerHTML = '';
-
-    // subject 묶기 (없으면 '기타')
-    const groups = {};
-    data.forEach((it)=>{
-      const subj = (it.subject && String(it.subject).trim()) ? String(it.subject).trim() : '기타';
-      if(!groups[subj]) groups[subj] = [];
-      groups[subj].push(it);
+  function renderSubjects(){
+    const sel=document.getElementById('subjectSelect');
+    const subs={};
+    data.forEach(it=>{const s=it.subject?it.subject:'기타'; if(!subs[s]) subs[s]=[]; subs[s].push(it);});
+    sel.innerHTML='';
+    Object.keys(subs).sort().forEach(s=>{
+      const opt=document.createElement('option');
+      opt.value=s; opt.textContent=s; sel.appendChild(opt);
     });
+    sel.onchange=()=>renderQuestions(sel.value,subs[sel.value]);
+    // 초기 표시
+    renderQuestions(Object.keys(subs)[0],subs[Object.keys(subs)[0]]);
+  }
 
-    // 열 생성
-    Object.keys(groups).sort().forEach(subj =>{
-      const col = document.createElement('div');
-      col.className='col';
-      const header = `<h3>${subj}</h3>`;
-      const btns = groups[subj].map(q=>
-        `<button class="qbtn" title="${escapeHtml(q.question)}" onclick="openQuestion(${q._idx})">${escapeHtml(q.question)}</button>`
-      ).join('');
-      col.innerHTML = header + btns;
-      grid.appendChild(col);
+  function renderQuestions(subj, arr){
+    const qList=document.getElementById('qList');
+    qList.innerHTML=`<h3>${subj}</h3>`;
+    arr.forEach(q=>{
+      const b=document.createElement('button');
+      b.className='qbtn';
+      b.textContent=q.question;
+      b.onclick=()=>openQuestion(q._idx);
+      qList.appendChild(b);
     });
   }
 
-  function updateStat(){
-    const stat = document.getElementById('statText');
-    stat.textContent = `남은 문항: ${data.length} / 연습횟수: ${practiceCount}/3`;
-  }
-
-  // ===== 모달(질문) =====
   function openQuestion(idx){
-    if(practiceCount >= 3){ alert('3회 연습을 모두 사용했습니다.'); return; }
-    currentIdx = idx;
-    const q = raw[idx];
-    document.getElementById('qTitle').textContent = q.question;
-    document.getElementById('userAnswer').textContent = '';
-    document.getElementById('result').innerHTML = '';
-    document.getElementById('submitBtn').disabled = true;
+    if(practiceCount>=3){alert('3회 연습 완료');return;}
+    currentIdx=idx;
+    const q=raw[idx];
+    document.getElementById('qTitle').textContent=q.question;
+    document.getElementById('userAnswer').textContent='';
+    document.getElementById('result').innerHTML='';
+    document.getElementById('submitBtn').disabled=true;
     document.getElementById('qd').showModal();
     speak(q.question);
   }
-  function closeQuestion(){ document.getElementById('qd').close(); }
+  function closeQuestion(){document.getElementById('qd').close();}
 
-  // ===== 음성 합성(질문 읽기) =====
-  function speak(txt){
-    const u = new SpeechSynthesisUtterance(txt);
-    u.lang = 'ko-KR';
-    speechSynthesis.cancel();
-    speechSynthesis.speak(u);
-  }
+  function speak(t){const u=new SpeechSynthesisUtterance(t);u.lang='ko-KR';speechSynthesis.speak(u);}
 
-  // ===== 음성 녹음 + (브라우저 지원 시) 실시간 음성 인식 =====
-  async function startRecord(){
-    // 녹음
-    const stream = await navigator.mediaDevices.getUserMedia({audio:true});
-    audioChunks = [];
-    mediaRecorder = new MediaRecorder(stream);
-    mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
-    mediaRecorder.onstop = () => {
-      // 녹음 종료 후 제출 버튼 활성화 (실제 전사는 Web Speech로 처리)
-      document.getElementById('submitBtn').disabled = false;
-    };
-    mediaRecorder.start();
-
-    // 실시간 전사 (Chrome 계열에서만 동작)
-    try{
-      const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-      if(SR && !recognizing){
-        const recog = new SR();
-        recog.lang='ko-KR';
-        recog.continuous=true;
-        recog.interimResults=true;
-        recognizing = true;
-        let buff = '';
-        recog.onresult = (ev)=>{
-          let finalText = '';
-          for(let i=ev.resultIndex;i<ev.results.length;i++){
-            const res = ev.results[i];
-            if(res.isFinal) finalText += res[0].transcript;
-            else buff = res[0].transcript; // 임시 표시
-          }
-          const ua = document.getElementById('userAnswer');
-          ua.textContent = (finalText || '') + (buff ? (' ' + buff) : '');
-        };
-        recog.onend = ()=>{ recognizing = false; };
-        recog.start();
-        // 6초 후 자동 정지 (필요 시 조정)
-        setTimeout(()=>{ try{recog.stop();}catch{} }, 6000);
-      }
-    }catch(e){ console.warn('SpeechRecognition 사용 불가', e); }
-
-    // 6초 후 자동 종료 (필요 시 조정)
-    setTimeout(()=>{ try{mediaRecorder.stop();}catch{} }, 6000);
-  }
-
-  // ===== 제출(유사도 계산 후 정답 표시) =====
-  function submitAnswer(){
-    const q = raw[currentIdx];
-    const userTxt = (document.getElementById('userAnswer').textContent || '').trim();
-    const gold = (q.answer || '').trim();
-    const sim = jaccardSim(tokenize(userTxt), tokenize(gold));
-    document.getElementById('result').innerHTML = `
-      <div class="row" style="justify-content:space-between;align-items:flex-end">
-        <div>
-          <div style="opacity:.8;margin-bottom:6px">정답 모범답안</div>
-          <div class="answer-box">${escapeHtml(gold)}</div>
-        </div>
-        <div class="score" style="margin-left:10px">${(sim*100).toFixed(1)}%</div>
-      </div>`;
-    practiceCount++; updateStat();
-  }
-
-  // ===== 습득완료(목록에서 제거) =====
-  function markLearned(){
-    if(currentIdx==null) return;
-    // data 배열에서 currentIdx를 가진 항목 제거
-    data = data.filter(x => x._idx !== currentIdx);
-    renderGrid(); updateStat(); closeQuestion();
-  }
-
-  // ===== 유틸 =====
-  function tokenize(t){
-    return String(t||'')
-      .replace(/[\n\r\t]/g,' ')
-      .replace(/[^가-힣a-zA-Z0-9 ]/g,' ')
-      .split(/\s+/).filter(Boolean);
-  }
-  function jaccardSim(aTokens, bTokens){
-    const A = new Set(aTokens), B = new Set(bTokens);
-    let inter = 0; A.forEach(x=>{ if(B.has(x)) inter++; });
-    const denom = (A.size + B.size - inter) || 1;
-    return inter / denom;
-  }
-  function escapeHtml(s){ return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m])); }
-
-  // ===== 이벤트 바인딩 =====
-  document.getElementById('resetProgress').onclick = ()=>{
-    practiceCount = 0; data = raw.map((x,i)=>({ ...x, _idx:i })); renderGrid(); updateStat();
+  document.getElementById('recordBtn').onclick=async()=>{
+    const stream=await navigator.mediaDevices.getUserMedia({audio:true});
+    const rec=new MediaRecorder(stream); let chunks=[];
+    rec.ondataavailable=e=>chunks.push(e.data);
+    rec.onstop=()=>{document.getElementById('userAnswer').textContent='(녹음 완료)';document.getElementById('submitBtn').disabled=false;};
+    rec.start(); setTimeout(()=>rec.stop(),5000);
   };
-  document.getElementById('speakBtn').onclick = ()=>{ const q=raw[currentIdx]; if(q) speak(q.question); };
-  document.getElementById('recordBtn').onclick = startRecord;
-  document.getElementById('submitBtn').onclick = submitAnswer;
-  document.getElementById('learnedBtn').onclick = markLearned;
-  document.getElementById('closeBtn').onclick = closeQuestion;
 
-  // 전역 노출(버튼 onclick용)
-  window.openQuestion = openQuestion;
+  document.getElementById('submitBtn').onclick=()=>{
+    const q=raw[currentIdx];
+    const user=document.getElementById('userAnswer').textContent;
+    const sim=similarity(user,q.answer);
+    document.getElementById('result').innerHTML=`<div class='answer-box'>${q.answer}</div><div class='score'>유사도 ${(sim*100).toFixed(1)}%</div>`;
+    practiceCount++;
+  };
 
-  // 시작
+  document.getElementById('learnedBtn').onclick=()=>{
+    data=data.filter(x=>x._idx!==currentIdx);
+    closeQuestion(); renderSubjects();
+  };
+  document.getElementById('closeBtn').onclick=closeQuestion;
+
+  function similarity(a,b){
+    const sa=new Set(a.split(' ')), sb=new Set(b.split(' ')); let inter=0;sa.forEach(w=>{if(sb.has(w))inter++;});
+    return inter/(sa.size+sb.size-inter||1);
+  }
+
   loadData();
   </script>
 </body>
