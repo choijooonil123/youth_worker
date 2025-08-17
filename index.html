@@ -22,11 +22,11 @@ header h1{margin:0;font-size:18px}
 .toolbar select{border:1px solid #2b3769;background:#0f1633;color:var(--ink);padding:8px 10px;border-radius:10px;min-width:220px}
 .counts{display:flex;gap:12px;align-items:center}
 .counts .pill{border-color:#2b3769}
+.adder{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-left:auto}
+.adder input{border:1px solid #2b3769;background:#0f1633;color:var(--ink);padding:8px 10px;border-radius:10px;min-width:240px}
 
 .grid{display:grid;gap:12px;padding:16px;grid-template-columns:1fr}
-.col{background:var(--panel);border:1px solid #202a59;border-radius:14px;overflow:hidden}
-.col h3{margin:0;padding:12px 14px;background:linear-gradient(180deg,#1a2552,transparent);border-bottom:1px solid #202a59;font-size:15px}
-.qbtn{display:block;width:100%;text-align:left;background:#0f1633;border:1px solid #1f2a5a;border-radius:12px;color:var(--ink);padding:12px;margin:10px;cursor:pointer;font-size:14px;line-height:1.35}
+.qbtn{display:block;width:100%;text-align:left;background:#0f1633;border:1px solid #1f2a5a;border-radius:12px;color:var(--ink);padding:12px;margin:0 0 10px;cursor:pointer;font-size:14px;line-height:1.35}
 .qbtn:hover{background:#121b3e}
 
 dialog{width:min(920px,96vw);background:#0c122a;border:1px solid #243064;border-radius:16px;color:var(--ink)}
@@ -41,32 +41,77 @@ dialog::backdrop{background:rgba(0,10,30,.6);backdrop-filter:blur(3px)}
 .answer-box{background:#0b1330;border:1px solid #212c5c;border-radius:14px;padding:12px;min-height:56px;white-space:pre-wrap}
 .score{font-size:36px;font-weight:800}
 
+/* 로그인 화면 */
+#loginView{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:radial-gradient(1000px 700px at 70% -10%,#1a2650 0%,#0b1020 50%)}
+.login-card{width:min(520px,92vw);background:#0c122a;border:1px solid #243064;border-radius:16px;padding:20px;display:flex;flex-direction:column;gap:12px}
+.login-card h2{margin:0}
+.field{display:flex;flex-direction:column;gap:6px}
+.field input{border:1px solid #2b3769;background:#0f1633;color:var(--ink);padding:10px;border-radius:10px}
+.leader{border-top:1px solid #263062;margin-top:8px;padding-top:8px}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{border-bottom:1px solid #1f2a55;padding:8px;text-align:left}
+th{color:#a7b3d4;font-weight:600}
+.err{color:#ff8080;font-size:13px;min-height:18px}
+
 ```
 
 </style>
 </head>
 <body>
+<!-- 로그인 화면 -->
+<div id="loginView">
+<div class="login-card">
+<h2>로그인</h2>
+<div class="field"><label>사용자 이름</label><input id="loginUser" placeholder="예) honggildong"/></div>
+<div class="field"><label>비밀번호</label><input id="loginPass" type="password" placeholder="••••••"/></div>
+<div class="err" id="loginErr"></div>
+<div class="row">
+<button id="loginBtn" class="btn primary">로그인 / 가입</button>
+</div>
+<div class="leader">
+<h3 style="margin:6px 0 4px">학습 순위</h3>
+<table id="rankTable"><thead><tr><th style="width:48px">순위</th><th>사용자</th><th style="width:120px">습득수</th></tr></thead><tbody></tbody></table>
+</div>
+</div>
+</div>
+
+<!-- 앱 본문 -->
+<div id="app" style="display:none">
 <header>
 <div class="pill">청소년지도사 면접 대비</div>
-<h1>과목 선택 · 질문 버튼 · 음성녹음 · 자동 유사도</h1>
+<!-- 요청: 문구 제거 → 제목 숨김 처리 -->
+<h1 style="display:none"></h1>
 </header>
 
+```
 <div class="wrap">
-<div class="panel">
-<div class="toolbar">
-<label for="subjectSelect" class="stat">과목 선택:</label>
-<select id="subjectSelect"></select>
-<div class="counts">
-<div class="pill" id="countTotal">총수: 0</div>
-<div class="pill" id="countLearned">습득수: 0</div>
-</div>
-<button id="resetProgress" class="btn">진행도 초기화</button>
-<span id="statText" class="stat"></span>
-</div>
-<div id="grid" class="grid"></div>
-</div>
+  <div class="panel">
+    <div class="toolbar">
+      <label for="subjectSelect" class="stat">과목 선택:</label>
+      <select id="subjectSelect"></select>
+      <div class="counts">
+        <div class="pill" id="countTotal">총수: 0</div>
+        <div class="pill" id="countLearned">습득수: 0</div>
+      </div>
+      <!-- 새 문항 추가 -->
+      <div class="adder">
+        <input id="addQ" placeholder="새 질문"/>
+        <input id="addA" placeholder="정답(모범답안)"/>
+        <button id="addBtn" class="btn">+ 추가</button>
+      </div>
+      <button id="resetProgress" class="btn">진행도 초기화</button>
+      <span id="statText" class="stat"></span>
+    </div>
+    <div id="bootNotice"></div>
+    <div id="grid" class="grid"></div>
+  </div>
 </div>
 
+```
+
+</div>
+
+<!-- 문제 다이얼로그 -->
 <dialog id="qd">
 <div class="dlg">
 <h2 id="qTitle">질문</h2>
@@ -81,24 +126,89 @@ dialog::backdrop{background:rgba(0,10,30,.6);backdrop-filter:blur(3px)}
 <div class="answer-box" id="userAnswer"></div>
 </div>
 <div id="result"></div>
+<div style="margin-top:6px">
+<h3 style="margin:10px 0 6px">이 문항의 정답(여러 개 관리)</h3>
+<div id="answerList" class="answer-box" style="min-height:0"></div>
+<div class="row">
+<input id="newAns" placeholder="이 문항에 새로운 정답(변형) 추가" style="flex:1;border:1px solid #2b3769;background:#0f1633;color:#eaf0ff;padding:8px 10px;border-radius:10px"/>
+<button id="addAnsBtn" class="btn">정답 추가</button>
+</div>
+<div class="stat" style="opacity:.8">라디오 버튼으로 선택된 정답이 이후 비교 및 음성출력에 사용됩니다.</div>
+</div>
 </div>
 </dialog>
 
 <script>
-let raw = [];
-let data = [];// 작업용(습득완료 제거 반영)
-let currentIdx = null;
-let mediaRecorder, audioChunks = [];
-let recognition; // STT용
+// ====== 로그인 & 순위 ======
+const LS_USERS_KEY = 'yj_users_v1';
+const LS_CURR_KEY  = 'yj_curr_user';
+function loadUsers(){ try{ return JSON.parse(localStorage.getItem(LS_USERS_KEY)||'{}'); }catch{ return {}; } }
+function saveUsers(obj){ localStorage.setItem(LS_USERS_KEY, JSON.stringify(obj)); }
+function currUser(){ return localStorage.getItem(LS_CURR_KEY)||''; }
+function setCurrUser(u){ localStorage.setItem(LS_CURR_KEY, u); }
+function ensureUser(username, password){
+const users = loadUsers();
+if(!users[username]) users[username] = { pass: password, learned: 0, learnedBySubject: {} };
+saveUsers(users);
+}
+function auth(username, password){
+const users = loadUsers();
+if(!users[username]) return { ok: true, newUser: true }; // 가입 허용
+if(users[username].pass === password) return { ok: true, newUser: false };
+return { ok: false, msg: '비밀번호가 올바르지 않습니다.' };
+}
+function updateLeaderboard(){
+const users = loadUsers();
+const rows = Object.entries(users).map(([name,u])=>({ name, learned: u.learned||0 }))
+.sort((a,b)=> b.learned - a.learned).slice(0,20);
+const tbody = document.querySelector('#rankTable tbody');
+tbody.innerHTML = rows.map((r,i)=>`<tr><td>${i+1}</td><td>${r.name}</td><td>${r.learned}</td></tr>`).join('') || '<tr><td colspan="3" style="opacity:.7">아직 데이터가 없습니다</td></tr>';
+}
+document.getElementById('loginBtn').onclick = ()=>{
+const u = document.getElementById('loginUser').value.trim();
+const p = document.getElementById('loginPass').value;
+if(!u || !p){ document.getElementById('loginErr').textContent='이름과 비밀번호를 입력하세요.'; return; }
+const r = auth(u,p);
+if(!r.ok){ document.getElementById('loginErr').textContent=r.msg; return; }
+ensureUser(u,p);
+setCurrUser(u);
+document.getElementById('loginView').style.display='none';
+document.getElementById('app').style.display='block';
+loadData();
+};
+updateLeaderboard();
 
-// ===== 유틸 =====
+// ====== 앱 본문 ======
+let raw = [];
+let data = [];// 작업용
+let currentIdx = null;
+let recognition;
+
 const normSubj = (s)=> (s && String(s).trim()) ? String(s).trim() : '기타';
-const subjects = ()=> Array.from(new Set(raw.map(x=>normSubj(x.subject)))).sort();
+function subjects(){ return Array.from(new Set(raw.map(x=>normSubj(x.subject)))).sort(); }
+
+const FALLBACK_DATA = [
+{ subject: '샘플과목', question: '청소년상담에서 라포의 핵심은?', answer: '진정성, 공감, 존중을 통해 신뢰관계를 형성' },
+{ subject: '샘플과목', question: '청소년 정책의 3대 축은?', answer: '보호, 참여, 발달' }
+];
 
 async function loadData(){
-try{ const r = await fetch('youth_quiz_data.json',{cache:'no-store'}); raw = await r.json(); }
-catch(e){ raw=[]; }
-data = raw.map((x,i)=>({ ...x, _idx:i }));
+const notice = document.getElementById('bootNotice');
+try{
+notice.textContent = '데이터 불러오는 중…';
+const r = await fetch('youth_quiz_data.json',{cache:'no-store'});
+if(!r.ok) throw new Error('데이터 요청 실패');
+raw = await r.json();
+if(!Array.isArray(raw) || raw.length===0) throw new Error('데이터가 비어 있습니다');
+notice.textContent = '';
+}catch(e){
+console.warn('데이터 로드 실패, 샘플 데이터로 시작', e);
+raw = FALLBACK_DATA.map(x=>({...x}));
+notice.textContent = '⚠️ youth_quiz_data.json을 불러오지 못하여 샘플 데이터로 실행 중입니다.';
+}
+// 정답 관리 필드 주입
+raw = raw.map((x,i)=>({ ...x, _idx:i, answers: Array.isArray(x.answers)? x.answers : [x.answer||''], active: (typeof x.active==='number'? x.active:0) }));
+data = raw.map(x=>({ ...x }));
 initSubjectSelect();
 renderBySubject(currentSubject());
 updateCounts(currentSubject());
@@ -110,6 +220,7 @@ const sel = document.getElementById('subjectSelect');
 sel.innerHTML = subjects().map(s=>`<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`).join('');
 if(subjects().length){ sel.value = subjects()[0]; }
 sel.addEventListener('change', ()=>{ renderBySubject(currentSubject()); updateCounts(currentSubject()); });
+document.getElementById('addBtn').onclick = addNewQA;
 }
 
 function currentSubject(){
@@ -119,14 +230,10 @@ return sel && sel.value ? sel.value : (subjects()[0]||'기타');
 
 function renderBySubject(subj){
 const grid = document.getElementById('grid');
-grid.innerHTML = '';
-const col = document.createElement('div');
-col.className = 'col';
 const list = data.filter(x=> normSubj(x.subject)===subj)
 .map(q=>`<button class="qbtn" onclick="openQuestion(${q._idx})" title="${escapeHtml(q.question)}">${escapeHtml(q.question)}</button>`)
 .join('');
-col.innerHTML = `<h3>${escapeHtml(subj)}</h3>` + (list || `<div style="padding:12px;opacity:.7">이 과목의 남은 문항이 없습니다.</div>`);
-grid.appendChild(col);
+grid.innerHTML = list || `<div style="padding:12px;opacity:.7">이 과목의 남은 문항이 없습니다.</div>`;
 }
 
 function updateCounts(subj){
@@ -136,9 +243,21 @@ const learned = Math.max(0, total - remain);
 document.getElementById('countTotal').textContent = `총수: ${total}`;
 document.getElementById('countLearned').textContent = `습득수: ${learned}`;
 }
+function updateGlobalStat(){ document.getElementById('statText').textContent = `전체 남은 문항: ${data.length}`; }
 
-function updateGlobalStat(){
-document.getElementById('statText').textContent = `전체 남은 문항: ${data.length}`;
+// 새 문항 추가 (현재 과목)
+function addNewQA(){
+const subj = currentSubject();
+const q = document.getElementById('addQ').value.trim();
+const a = document.getElementById('addA').value.trim();
+if(!q || !a){ alert('질문과 정답을 모두 입력하세요.'); return; }
+const idx = raw.length;
+const item = { subject: subj, question: q, answers: [a], active: 0, _idx: idx };
+raw.push(item);
+data.push({ ...item });
+document.getElementById('addQ').value='';
+document.getElementById('addA').value='';
+renderBySubject(subj); updateCounts(subj); updateGlobalStat();
 }
 
 // ===== 모달(질문) =====
@@ -149,61 +268,90 @@ document.getElementById('qTitle').textContent = q.question;
 document.getElementById('userAnswer').textContent = '';
 document.getElementById('result').innerHTML = '';
 document.getElementById('submitBtn').disabled = true;
+renderAnswerList();
 document.getElementById('qd').showModal();
 speak(q.question);
 }
-function closeQuestion(){ document.getElementById('qd').close(); if(recognition){ recognition.stop(); recognition=null; } }
+function closeQuestion(){ if(recognition){ recognition.stop(); recognition=null; } document.getElementById('qd').close(); }
 
-// ===== 음성 합성 =====
 function speak(txt){ const u = new SpeechSynthesisUtterance(txt); u.lang='ko-KR'; speechSynthesis.cancel(); speechSynthesis.speak(u); }
 
-// ===== 음성 인식(STT) =====
+// 음성 인식
 function startRecognition(){
 window.SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 if(!window.SpeechRecognition){ alert('이 브라우저는 음성 인식을 지원하지 않습니다.'); return; }
 recognition = new SpeechRecognition();
-recognition.lang = 'ko-KR';
-recognition.continuous = true;
-recognition.interimResults = true;
-
-```
+recognition.lang = 'ko-KR'; recognition.continuous = true; recognition.interimResults = true;
 let finalTranscript = '';
 recognition.onresult = (event)=>{
-  let interim = '';
-  for(let i=event.resultIndex;i<event.results.length;i++){
-    const t = event.results[i][0].transcript;
-    if(event.results[i].isFinal){ finalTranscript += t + ' '; }
-    else { interim += t; }
-  }
-  const combined = (finalTranscript + interim).trim();
-  document.getElementById('userAnswer').textContent = combined;
+let interim='';
+for(let i=event.resultIndex;i<event.results.length;i++){
+const t=event.results[i][0].transcript;
+if(event.results[i].isFinal){ finalTranscript += t+' '; }
+else{ interim += t; }
+}
+document.getElementById('userAnswer').textContent = (finalTranscript+interim).trim();
 };
-recognition.onend = ()=>{ document.getElementById('submitBtn').disabled = false; };
+recognition.onend = ()=>{ document.getElementById('submitBtn').disabled=false; };
 recognition.start();
+}
+document.getElementById('recordBtn').onclick = ()=>{ document.getElementById('userAnswer').textContent='(녹음중...)'; startRecognition(); };
+
+// 제출 → 선택된 정답으로 비교 + 음성
+document.getElementById('submitBtn').onclick = ()=>{
+const q = raw[currentIdx];
+const gold = q.answers[q.active||0] || '';
+const user = document.getElementById('userAnswer').textContent;
+const sim = similarity(user, gold);
+document.getElementById('result').innerHTML = `<div class='answer-box'>${escapeHtml(gold)}</div><div class='score'>유사도 ${(sim*100).toFixed(1)}%</div>`;
+speak('정답입니다. ' + gold);
+};
+
+// 정답 리스트 렌더 & 관리
+function renderAnswerList(){
+const box = document.getElementById('answerList');
+const q = raw[currentIdx];
+box.innerHTML = q.answers.map((ans,i)=>{
+const checked = (q.active||0)===i ? 'checked' : '';
+return `<label style="display:flex;gap:8px;align-items:center;margin:6px 0">         <input type="radio" name="ansPick" value="${i}" ${checked}/> <span>${escapeHtml(ans)}</span>       </label>`;
+}).join('') || '<div style="opacity:.7">등록된 정답이 없습니다.</div>';
+
+```
+// 라디오 바인딩
+box.querySelectorAll('input[name="ansPick"]').forEach(r=>{
+  r.addEventListener('change', (e)=>{
+    raw[currentIdx].active = parseInt(e.target.value,10)||0;
+  });
+});
+
+// 추가 버튼
+document.getElementById('addAnsBtn').onclick = ()=>{
+  const val = document.getElementById('newAns').value.trim();
+  if(!val) return;
+  raw[currentIdx].answers.push(val);
+  raw[currentIdx].active = raw[currentIdx].answers.length-1; // 방금 추가한 답안을 기본으로
+  document.getElementById('newAns').value='';
+  renderAnswerList();
+};
 
 ```
 
 }
 
-// ===== 녹음 버튼 =====
-document.getElementById('recordBtn').onclick = ()=>{
-document.getElementById('userAnswer').textContent = '(녹음중...)';
-startRecognition();
-};
-
-// ===== 제출 =====
-document.getElementById('submitBtn').onclick = ()=>{
-const q = raw[currentIdx];
-const user = document.getElementById('userAnswer').textContent;
-const sim = similarity(user, q.answer);
-document.getElementById('result').innerHTML = `<div class='answer-box'>${escapeHtml(q.answer)}</div><div class='score'>유사도 ${(sim*100).toFixed(1)}%</div>`;
-speak('정답입니다. ' + q.answer);
-};
-
-// ===== 습득완료 =====
+// 습득완료 → 현재 사용자 점수 반영
 document.getElementById('learnedBtn').onclick = ()=>{
 const subj = currentSubject();
 data = data.filter(x=> x._idx !== currentIdx);
+// 점수 업데이트(로컬스토리지)
+const u = currUser();
+const users = loadUsers();
+if(users[u]){
+users[u].learned = (users[u].learned||0) + 1;
+const ns = normSubj(subj);
+users[u].learnedBySubject = users[u].learnedBySubject || {};
+users[u].learnedBySubject[ns] = (users[u].learnedBySubject[ns]||0) + 1;
+saveUsers(users);
+}
 closeQuestion();
 renderBySubject(subj);
 updateCounts(subj);
@@ -211,7 +359,6 @@ updateGlobalStat();
 };
 document.getElementById('closeBtn').onclick = closeQuestion;
 
-// ===== 간단 유사도 =====
 function similarity(a,b){
 const sa=new Set(String(a).split(/\s+/).filter(Boolean));
 const sb=new Set(String(b).split(/\s+/).filter(Boolean));
@@ -220,17 +367,23 @@ return inter/(sa.size+sb.size-inter||1);
 }
 function escapeHtml(s){return String(s).replace(/[&<>"']/g,m=>({"&":"&","<":"<",">":">","\"":""","'":"'"}[m]));}
 
-// ===== 진행도 초기화 =====
+// 진행도 초기화
 document.getElementById('resetProgress').onclick = ()=>{
-data = raw.map((x,i)=>({ ...x, _idx:i }));
+data = raw.map(x=>({ ...x }));
 renderBySubject(currentSubject());
 updateCounts(currentSubject());
 updateGlobalStat();
 };
 
-// 시작
+// 자동 로그인 유지 (있다면)
+(function(){
+const u = currUser();
+if(u){
+document.getElementById('loginView').style.display='none';
+document.getElementById('app').style.display='block';
 loadData();
-window.openQuestion = openQuestion;
+}
+})();
 </script>
 </body>
 </html>
