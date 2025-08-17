@@ -1,237 +1,236 @@
 <!doctype html>
 <html lang="ko">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>청소년지도사 면접 연습 시스템</title>
-  <style>
-    :root{ --bg:#0b1020; --panel:#10183a; --ink:#eaf0ff; --muted:#a7b3d4; --brand:#6aa6ff; --accent:#a176ff; --ok:#4cd97b; --danger:#ff6a6a; }
-    *{box-sizing:border-box}
-    body{margin:0;font-family:ui-sans-serif,system-ui,Apple SD Gothic Neo,Noto Sans KR,Segoe UI,Roboto,sans-serif;color:var(--ink);background:radial-gradient(1200px 800px at 80% -10%,#1a2650 0%,#0b1020 45%)}
-    header{padding:18px 20px 10px;display:flex;gap:10px;align-items:center}
-    .spacer{flex:1}
-    header h1{margin:0;font-size:18px}
-    .pill{border:1px solid #28376e;border-radius:999px;color:var(--muted);padding:6px 10px;font-size:12px}
-    
-    .wrap{max-width:1200px;margin:0 auto;padding:10px 16px 40px}
-    .panel{border:1px solid #263062;border-radius:16px;background:linear-gradient(180deg,rgba(255,255,255,.03),rgba(255,255,255,0));box-shadow:0 10px 40px rgba(0,0,0,.35)}
-    .toolbar{display:flex;gap:10px;align-items:center;padding:14px;border-bottom:1px solid #283162;flex-wrap:wrap}
-    .toolbar .btn{border:1px solid #2b3769;background:#16214a;color:var(--ink);padding:8px 12px;border-radius:10px;cursor:pointer;font-weight:700}
-    .toolbar .btn:hover{background:#1a2a56}
-    .toolbar .stat{color:var(--muted);font-size:13px}
-    .toolbar select{border:1px solid #2b3769;background:#0f1633;color:var(--ink);padding:8px 10px;border-radius:10px;min-width:220px}
-    .counts{display:flex;gap:12px;align-items:center}
-    .counts .pill{border-color:#2b3769}
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>청소년지도사 면접 연습 시스템</title>
+<style>
+:root{ --bg:#0b1020; --panel:#10183a; --ink:#eaf0ff; --muted:#a7b3d4; --brand:#6aa6ff; --accent:#a176ff; --ok:#4cd97b; --danger:#ff6a6a; }
+*{box-sizing:border-box}
+body{margin:0;font-family:ui-sans-serif,system-ui,Apple SD Gothic Neo,Noto Sans KR,Segoe UI,Roboto,sans-serif;color:var(--ink);background:radial-gradient(1200px 800px at 80% -10%,#1a2650 0%,#0b1020 45%)}
+header{padding:18px 20px 10px;display:flex;gap:10px;align-items:center}
+header h1{margin:0;font-size:18px}
+.pill{border:1px solid #28376e;border-radius:999px;color:var(--muted);padding:6px 10px;font-size:12px}
 
-    .grid{display:grid;gap:8px;padding:12px;grid-template-columns:1fr}
-    .qbtn{display:block;width:100%;text-align:left;background:#0f1633;border:1px solid #1f2a5a;border-radius:12px;color:var(--ink);padding:10px;margin:4px 0;cursor:pointer;font-size:14px;line-height:1.32}
-    .qbtn:hover{background:#121b3e}
+```
+.wrap{max-width:1200px;margin:0 auto;padding:10px 16px 40px}
+.panel{border:1px solid #263062;border-radius:16px;background:linear-gradient(180deg,rgba(255,255,255,.03),rgba(255,255,255,0));box-shadow:0 10px 40px rgba(0,0,0,.35)}
+.toolbar{display:flex;gap:10px;align-items:center;padding:14px;border-bottom:1px solid #283162;flex-wrap:wrap}
+.toolbar .btn{border:1px solid #2b3769;background:#16214a;color:var(--ink);padding:8px 12px;border-radius:10px;cursor:pointer;font-weight:700}
+.toolbar .btn:hover{background:#1a2a56}
+.toolbar .stat{color:var(--muted);font-size:13px}
+.toolbar select{border:1px solid #2b3769;background:#0f1633;color:var(--ink);padding:8px 10px;border-radius:10px;min-width:220px}
+.counts{display:flex;gap:12px;align-items:center}
+.counts .pill{border-color:#2b3769}
 
-    dialog{width:min(920px,96vw);background:#0c122a;border:1px solid #243064;border-radius:16px;color:var(--ink)}
-    dialog::backdrop{background:rgba(0,10,30,.6);backdrop-filter:blur(3px)}
-    .dlg{padding:16px;display:flex;flex-direction:column;gap:12px}
-    .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-    .btn{border:1px solid #304080;background:#15204a;color:var(--ink);padding:10px 12px;border-radius:12px;cursor:pointer;font-weight:700}
-    .btn.primary{background:linear-gradient(180deg,#1f3d92,#1a2c6d);border-color:#2f47a8}
-    .btn.ok{background:#123b2a;border-color:#0d5b3a}
-    .btn.danger{background:#3a1330;border-color:#7a244f}
-    .answer-box{background:#0b1330;border:1px solid #212c5c;border-radius:14px;padding:12px;min-height:56px;white-space:pre-wrap}
-    textarea{width:100%;background:#0b1330;color:var(--ink);border:1px solid #212c5c;border-radius:14px;padding:8px;resize:vertical;min-height:80px}
-    .score{font-size:36px;font-weight:800}
-  </style>
+.grid{display:grid;gap:12px;padding:16px;grid-template-columns:1fr}
+.col{background:var(--panel);border:1px solid #202a59;border-radius:14px;overflow:hidden}
+.col h3{margin:0;padding:12px 14px;background:linear-gradient(180deg,#1a2552,transparent);border-bottom:1px solid #202a59;font-size:15px}
+.qbtn{display:block;width:100%;text-align:left;background:#0f1633;border:1px solid #1f2a5a;border-radius:12px;color:var(--ink);padding:12px;margin:10px;cursor:pointer;font-size:14px;line-height:1.35}
+.qbtn:hover{background:#121b3e}
+
+dialog{width:min(920px,96vw);background:#0c122a;border:1px solid #243064;border-radius:16px;color:var(--ink)}
+dialog::backdrop{background:rgba(0,10,30,.6);backdrop-filter:blur(3px)}
+.dlg{padding:16px;display:flex;flex-direction:column;gap:12px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.btn{border:1px solid #304080;background:#15204a;color:var(--ink);padding:10px 12px;border-radius:12px;cursor:pointer;font-weight:700}
+.btn[disabled]{opacity:.5;cursor:not-allowed}
+.btn.primary{background:linear-gradient(180deg,#1f3d92,#1a2c6d);border-color:#2f47a8}
+.btn.ok{background:#123b2a;border-color:#0d5b3a}
+.btn.danger{background:#3a1330;border-color:#7a244f}
+.answer-box{background:#0b1330;border:1px solid #212c5c;border-radius:14px;padding:12px;min-height:56px;white-space:pre-wrap}
+.score{font-size:36px;font-weight:800}
+
+```
+
+</style>
 </head>
 <body>
-  <header>
-    <div class="pill">청소년지도사 면접 대비</div>
-    <h1>로그인 및 학습 시스템</h1>
-    <div class="spacer"></div>
-    <div id="headerRank" class="pill" style="display:none"></div>
-    <div id="headerUser" class="pill" style="display:none"></div>
-    <button id="logoutBtn" class="btn" style="display:none">로그아웃</button>
-  </header>
+<header>
+<div class="pill">청소년지도사 면접 대비</div>
+<h1>과목 선택 · 질문 버튼 · 음성녹음 · 자동 유사도</h1>
+</header>
 
-  <div class="wrap">
-    <div id="loginPanel" class="panel">
-      <div style="padding:20px;display:flex;flex-direction:column;gap:12px">
-        <h2>로그인</h2>
-        <input id="username" placeholder="사용자 이름" style="padding:8px;border-radius:6px;border:1px solid #2b3769;background:#0f1633;color:var(--ink)">
-        <input id="password" type="password" placeholder="비밀번호" style="padding:8px;border-radius:6px;border:1px solid #2b3769;background:#0f1633;color:var(--ink)">
-        <button id="loginBtn" class="btn primary">로그인</button>
-        <div id="rankList" style="margin-top:20px"></div>
-      </div>
-    </div>
+<div class="wrap">
+<div class="panel">
+<div class="toolbar">
+<label for="subjectSelect" class="stat">과목 선택:</label>
+<select id="subjectSelect"></select>
+<div class="counts">
+<div class="pill" id="countTotal">총수: 0</div>
+<div class="pill" id="countLearned">습득수: 0</div>
+</div>
+<button id="resetProgress" class="btn">진행도 초기화</button>
+<span id="statText" class="stat"></span>
+</div>
+<div id="grid" class="grid"></div>
+</div>
+</div>
 
-    <div id="mainPanel" class="panel" style="display:none">
-      <div class="toolbar">
-        <button id="resetProgress" class="btn">초기화</button>
-        <label for="subjectSelect" class="stat">과목 선택:</label>
-        <select id="subjectSelect"></select>
-        <div class="counts">
-          <div class="pill" id="countTotal">총수: 0</div>
-          <div class="pill" id="countLearned">습득수: 0</div>
-        </div>
-        <button id="addQuestionBtn" class="btn">새 질문 추가</button>
-      </div>
-      <div id="grid" class="grid"></div>
-    </div>
-  </div>
+<dialog id="qd">
+<div class="dlg">
+<h2 id="qTitle">질문</h2>
+<div class="row">
+<button id="speakBtn" class="btn">🔊 질문 다시듣기</button>
+<button id="recordBtn" class="btn">🎤 답변녹음</button>
+<button id="submitBtn" class="btn primary" disabled>✅ 답변제출</button>
+<button id="learnedBtn" class="btn ok">📌 습득완료</button>
+<button id="closeBtn" class="btn danger">❌ 닫기</button>
+</div>
+<div>
+<div class="answer-box" id="userAnswer"></div>
+</div>
+<div id="result"></div>
+</div>
+</dialog>
 
-  <dialog id="qd">
-    <div class="dlg">
-      <h2 id="qTitle">질문</h2>
-      <div class="row">
-        <button id="speakBtn" class="btn">🔊 질문 다시듣기</button>
-        <button id="recordBtn" class="btn">🎤 답변녹음</button>
-        <button id="submitBtn" class="btn primary">✅ 답변완료</button>
-        <button id="addAnswerBtn" class="btn">➕ 답변 추가</button>
-        <button id="deleteQuestionBtn" class="btn danger">🗑 질문 삭제</button>
-        <button id="learnedBtn" class="btn ok">📌 습득완료</button>
-        <button id="closeBtn" class="btn danger">❌ 닫기</button>
-      </div>
-      <div>
-        <div class="answer-box" id="userAnswer"></div>
-      </div>
-      <div id="result"></div>
-      <div id="extraAnswers"></div>
-    </div>
-  </dialog>
+<script>
+let raw = [];
+let data = [];// 작업용(습득완료 제거 반영)
+let currentIdx = null;
+let mediaRecorder, audioChunks = [];
+let recognition; // STT용
 
-  <script>
-  let raw=[]; let data=[]; let currentIdx=null; let recognition; let currentUser=null; let scores={};
+// ===== 유틸 =====
+const normSubj = (s)=> (s && String(s).trim()) ? String(s).trim() : '기타';
+const subjects = ()=> Array.from(new Set(raw.map(x=>normSubj(x.subject)))).sort();
 
-  const normSubj=s=>(s&&String(s).trim())?String(s).trim():'기타';
-  function subjects(){return Array.from(new Set(raw.map(x=>normSubj(x.subject)))).sort();}
+async function loadData(){
+try{ const r = await fetch('youth_quiz_data.json',{cache:'no-store'}); raw = await r.json(); }
+catch(e){ raw=[]; }
+data = raw.map((x,i)=>({ ...x, _idx:i }));
+initSubjectSelect();
+renderBySubject(currentSubject());
+updateCounts(currentSubject());
+updateGlobalStat();
+}
 
-  const FALLBACK_DATA=[{subject:"샘플과목",question:"청소년상담에서 라포의 핵심은?",answer:"진정성, 공감, 존중을 통해 신뢰관계를 형성"}];
+function initSubjectSelect(){
+const sel = document.getElementById('subjectSelect');
+sel.innerHTML = subjects().map(s=>`<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`).join('');
+if(subjects().length){ sel.value = subjects()[0]; }
+sel.addEventListener('change', ()=>{ renderBySubject(currentSubject()); updateCounts(currentSubject()); });
+}
 
-  async function loadData(){ raw=FALLBACK_DATA.map(x=>({...x})); data=raw.map((x,i)=>({...x,_idx:i,answers:[x.answer]})); }
+function currentSubject(){
+const sel = document.getElementById('subjectSelect');
+return sel && sel.value ? sel.value : (subjects()[0]||'기타');
+}
 
-  function initSubjectSelect(){
-    const sel=document.getElementById('subjectSelect');
-    sel.innerHTML=subjects().map(s=>`<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`).join('');
-    if(subjects().length){ sel.value=subjects()[0]; }
-    sel.addEventListener('change',()=>{ renderBySubject(currentSubject()); updateCounts(currentSubject()); });
+function renderBySubject(subj){
+const grid = document.getElementById('grid');
+grid.innerHTML = '';
+const col = document.createElement('div');
+col.className = 'col';
+const list = data.filter(x=> normSubj(x.subject)===subj)
+.map(q=>`<button class="qbtn" onclick="openQuestion(${q._idx})" title="${escapeHtml(q.question)}">${escapeHtml(q.question)}</button>`)
+.join('');
+col.innerHTML = `<h3>${escapeHtml(subj)}</h3>` + (list || `<div style="padding:12px;opacity:.7">이 과목의 남은 문항이 없습니다.</div>`);
+grid.appendChild(col);
+}
+
+function updateCounts(subj){
+const total = raw.filter(x=> normSubj(x.subject)===subj).length;
+const remain = data.filter(x=> normSubj(x.subject)===subj).length;
+const learned = Math.max(0, total - remain);
+document.getElementById('countTotal').textContent = `총수: ${total}`;
+document.getElementById('countLearned').textContent = `습득수: ${learned}`;
+}
+
+function updateGlobalStat(){
+document.getElementById('statText').textContent = `전체 남은 문항: ${data.length}`;
+}
+
+// ===== 모달(질문) =====
+function openQuestion(idx){
+currentIdx = idx;
+const q = raw[idx];
+document.getElementById('qTitle').textContent = q.question;
+document.getElementById('userAnswer').textContent = '';
+document.getElementById('result').innerHTML = '';
+document.getElementById('submitBtn').disabled = true;
+document.getElementById('qd').showModal();
+speak(q.question);
+}
+function closeQuestion(){ document.getElementById('qd').close(); if(recognition){ recognition.stop(); recognition=null; } }
+
+// ===== 음성 합성 =====
+function speak(txt){ const u = new SpeechSynthesisUtterance(txt); u.lang='ko-KR'; speechSynthesis.cancel(); speechSynthesis.speak(u); }
+
+// ===== 음성 인식(STT) =====
+function startRecognition(){
+window.SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+if(!window.SpeechRecognition){ alert('이 브라우저는 음성 인식을 지원하지 않습니다.'); return; }
+recognition = new SpeechRecognition();
+recognition.lang = 'ko-KR';
+recognition.continuous = true;
+recognition.interimResults = true;
+
+```
+let finalTranscript = '';
+recognition.onresult = (event)=>{
+  let interim = '';
+  for(let i=event.resultIndex;i<event.results.length;i++){
+    const t = event.results[i][0].transcript;
+    if(event.results[i].isFinal){ finalTranscript += t + ' '; }
+    else { interim += t; }
   }
-  function currentSubject(){const sel=document.getElementById('subjectSelect');return sel&&sel.value?sel.value:(subjects()[0]||'기타');}
+  const combined = (finalTranscript + interim).trim();
+  document.getElementById('userAnswer').textContent = combined;
+};
+recognition.onend = ()=>{ document.getElementById('submitBtn').disabled = false; };
+recognition.start();
 
-  function renderBySubject(subj){
-    const grid=document.getElementById('grid');
-    grid.innerHTML='';
-    const list=data.filter(x=>normSubj(x.subject)===subj)
-      .map(q=>`<button class="qbtn" onclick="openQuestion(${q._idx})">${escapeHtml(q.question)}</button>`).join('');
-    grid.innerHTML=list||'<div style="padding:12px;opacity:.7">이 과목의 남은 문항이 없습니다.</div>';
-  }
+```
 
-  function updateCounts(subj){
-    const total=raw.filter(x=>normSubj(x.subject)===subj).length;
-    const remain=data.filter(x=>normSubj(x.subject)===subj).length;
-    const learned=Math.max(0,total-remain);
-    document.getElementById('countTotal').textContent=`총수: ${total}`;
-    document.getElementById('countLearned').textContent=`습득수: ${learned}`;
-    if(currentUser){ scores[currentUser]=learned; renderRanks(); updateHeaderUser(); }
-  }{
-    const total=raw.filter(x=>normSubj(x.subject)===subj).length;
-    const remain=data.filter(x=>normSubj(x.subject)===subj).length;
-    const learned=Math.max(0,total-remain);
-    document.getElementById('countTotal').textContent=`총수: ${total}`;
-    document.getElementById('countLearned').textContent=`습득수: ${learned}`;
-    if(currentUser){ scores[currentUser]=learned; renderRanks(); }
-  }
+}
 
-  function openQuestion(idx){
-    currentIdx=idx;
-    const q=data.find(x=>x._idx===idx);
-    document.getElementById('qTitle').textContent=q.question;
-    document.getElementById('userAnswer').textContent='';
-    document.getElementById('result').innerHTML='';
-    document.getElementById('qd').showModal();
-    renderExtraAnswers(q);
-  }
-  function closeQuestion(){if(recognition){recognition.stop();recognition=null;}document.getElementById('qd').close();}
+// ===== 녹음 버튼 =====
+document.getElementById('recordBtn').onclick = ()=>{
+document.getElementById('userAnswer').textContent = '(녹음중...)';
+startRecognition();
+};
 
-  function speak(txt){const u=new SpeechSynthesisUtterance(txt);u.lang='ko-KR';speechSynthesis.cancel();speechSynthesis.speak(u);}
+// ===== 제출 =====
+document.getElementById('submitBtn').onclick = ()=>{
+const q = raw[currentIdx];
+const user = document.getElementById('userAnswer').textContent;
+const sim = similarity(user, q.answer);
+document.getElementById('result').innerHTML = `<div class='answer-box'>${escapeHtml(q.answer)}</div><div class='score'>유사도 ${(sim*100).toFixed(1)}%</div>`;
+speak('정답입니다. ' + q.answer);
+};
 
-  document.getElementById('recordBtn').onclick=()=>{document.getElementById('userAnswer').textContent='(녹음중...)';};
+// ===== 습득완료 =====
+document.getElementById('learnedBtn').onclick = ()=>{
+const subj = currentSubject();
+data = data.filter(x=> x._idx !== currentIdx);
+closeQuestion();
+renderBySubject(subj);
+updateCounts(subj);
+updateGlobalStat();
+};
+document.getElementById('closeBtn').onclick = closeQuestion;
 
-  document.getElementById('submitBtn').onclick=()=>{
-    const q=data.find(x=>x._idx===currentIdx);
-    const user=document.getElementById('userAnswer').textContent;
-    let bestAnswer=q.answers[0]; let bestSim=0;
-    q.answers.forEach(ans=>{const sim=similarity(user,ans);if(sim>bestSim){bestSim=sim;bestAnswer=ans;}});
-    document.getElementById('result').innerHTML=`<div class='answer-box'>${escapeHtml(bestAnswer)}</div><div class='score'>유사도 ${(bestSim*100).toFixed(1)}%</div>`;
-    speak('정답입니다. '+bestAnswer);
-  };
+// ===== 간단 유사도 =====
+function similarity(a,b){
+const sa=new Set(String(a).split(/\s+/).filter(Boolean));
+const sb=new Set(String(b).split(/\s+/).filter(Boolean));
+let inter=0; sa.forEach(w=>{ if(sb.has(w)) inter++; });
+return inter/(sa.size+sb.size-inter||1);
+}
+function escapeHtml(s){return String(s).replace(/[&<>"']/g,m=>({"&":"&","<":"<",">":">","\"":""","'":"'"}[m]));}
 
-  document.getElementById('learnedBtn').onclick=()=>{const subj=currentSubject();data=data.filter(x=>x._idx!==currentIdx);closeQuestion();renderBySubject(subj);updateCounts(subj);};
-  document.getElementById('closeBtn').onclick=closeQuestion;
+// ===== 진행도 초기화 =====
+document.getElementById('resetProgress').onclick = ()=>{
+data = raw.map((x,i)=>({ ...x, _idx:i }));
+renderBySubject(currentSubject());
+updateCounts(currentSubject());
+updateGlobalStat();
+};
 
-  document.getElementById('addAnswerBtn').onclick=()=>{
-    const q=data.find(x=>x._idx===currentIdx);
-    const newAns=prompt('새로운 답변을 입력하세요');
-    if(newAns){q.answers.push(newAns);renderExtraAnswers(q);}
-  };
-
-  document.getElementById('deleteQuestionBtn').onclick=()=>{
-    const subj=currentSubject();
-    data=data.filter(x=>x._idx!==currentIdx);
-    raw=raw.filter((_,i)=>i!==currentIdx);
-    closeQuestion(); renderBySubject(subj); updateCounts(subj);
-  };
-
-  document.getElementById('addQuestionBtn').onclick=()=>{
-    const subj=currentSubject();
-    const q=prompt('새 질문 입력');
-    const a=prompt('정답 입력');
-    if(q&&a){const idx=raw.length; raw.push({subject:subj,question:q,answer:a}); data.push({_idx:idx,subject:subj,question:q,answers:[a]}); renderBySubject(subj); updateCounts(subj);} 
-  };
-
-  function renderExtraAnswers(q){
-    const div=document.getElementById('extraAnswers');
-    div.innerHTML='<h3>추가 답변</h3>'+q.answers.map((ans,i)=>`<div><textarea readonly>${escapeHtml(ans)}</textarea><button onclick="deleteAnswer(${i})">🗑 삭제</button></div>`).join('');
-  }
-  window.deleteAnswer=function(i){
-    const q=data.find(x=>x._idx===currentIdx);
-    q.answers.splice(i,1); renderExtraAnswers(q);
-  };
-
-  function similarity(a,b){const sa=new Set(String(a).split(/\s+/).filter(Boolean));const sb=new Set(String(b).split(/\s+/).filter(Boolean));let inter=0;sa.forEach(w=>{if(sb.has(w))inter++;});return inter/(sa.size+sb.size-inter||1);}
-  function escapeHtml(s){return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m]));}
-
-  function renderRanks(){const list=Object.entries(scores).sort((a,b)=>b[1]-a[1]);const div=document.getElementById('rankList');div.innerHTML='<h3>습득 순위</h3>'+list.map(([u,v],i)=>`<div>${i+1}. ${u}: ${v}</div>`).join('');}
-
-  document.getElementById('loginBtn').onclick=()=>{
-    const u=document.getElementById('username').value.trim();
-    const p=document.getElementById('password').value.trim();
-    if(!u||!p){alert('이름과 비밀번호를 입력하세요');return;}
-    currentUser=u;
-    if(scores[currentUser]===undefined) scores[currentUser]=0;
-    document.getElementById('loginPanel').style.display='none';
-    document.getElementById('mainPanel').style.display='block';
-    initSubjectSelect();
-    renderBySubject(currentSubject());
-    updateCounts(currentSubject());
-    updateHeaderUser();
-  };
-
-  // 로그아웃
-  document.getElementById('logoutBtn').onclick=()=>{
-    currentUser=null;
-    document.getElementById('mainPanel').style.display='none';
-    document.getElementById('loginPanel').style.display='block';
-    document.getElementById('headerUser').style.display='none';
-    document.getElementById('headerRank').style.display='none';
-    document.getElementById('logoutBtn').style.display='none';
-    renderRanks();
-  };
-
-  // 초기화 버튼 동작: 데이터 리셋
-  document.getElementById('resetProgress').onclick=()=>{
-    loadData().then(()=>{initSubjectSelect();renderBySubject(currentSubject());updateCounts(currentSubject());});
-  };
-
-  loadData();
-  updateRanksAndHeader();
-  window.openQuestion=openQuestion;
-  </script>
+// 시작
+loadData();
+window.openQuestion = openQuestion;
+</script>
 </body>
 </html>
