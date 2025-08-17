@@ -1,17 +1,123 @@
-<script>
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>청소년지도사 면접 연습 시스템</title>
+  <style>
+    :root{ --bg:#0b1020; --panel:#10183a; --ink:#eaf0ff; --muted:#a7b3d4; --brand:#6aa6ff; --accent:#a176ff; --ok:#4cd97b; --danger:#ff6a6a; }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:ui-sans-serif,system-ui,Apple SD Gothic Neo,Noto Sans KR,Segoe UI,Roboto,sans-serif;color:var(--ink);background:radial-gradient(1200px 800px at 80% -10%,#1a2650 0%,#0b1020 45%)}
+    header{padding:18px 20px 10px;display:flex;gap:10px;align-items:center}
+    header h1{margin:0;font-size:18px}
+    .pill{border:1px solid #28376e;border-radius:999px;color:var(--muted);padding:6px 10px;font-size:12px}
+
+    .wrap{max-width:1200px;margin:0 auto;padding:10px 16px 40px}
+    .panel{border:1px solid #263062;border-radius:16px;background:linear-gradient(180deg,rgba(255,255,255,.03),rgba(255,255,255,0));box-shadow:0 10px 40px rgba(0,0,0,.35)}
+    .toolbar{display:flex;gap:10px;align-items:center;padding:14px;border-bottom:1px solid #283162;flex-wrap:wrap}
+    .toolbar .btn{border:1px solid #2b3769;background:#16214a;color:var(--ink);padding:8px 12px;border-radius:10px;cursor:pointer;font-weight:700}
+    .toolbar .btn:hover{background:#1a2a56}
+    .toolbar .stat{color:var(--muted);font-size:13px}
+    .toolbar select{border:1px solid #2b3769;background:#0f1633;color:var(--ink);padding:8px 10px;border-radius:10px;min-width:220px}
+    .counts{display:flex;gap:12px;align-items:center}
+    .counts .pill{border-color:#2b3769}
+
+    .grid{display:grid;gap:12px;padding:16px;grid-template-columns:1fr}
+    .col{background:var(--panel);border:1px solid #202a59;border-radius:14px;overflow:hidden}
+    .col h3{margin:0;padding:12px 14px;background:linear-gradient(180deg,#1a2552,transparent);border-bottom:1px solid #202a59;font-size:15px}
+    .qbtn{display:block;width:100%;text-align:left;background:#0f1633;border:1px solid #1f2a5a;border-radius:12px;color:var(--ink);padding:12px;margin:10px;cursor:pointer;font-size:14px;line-height:1.35}
+    .qbtn:hover{background:#121b3e}
+
+    dialog{width:min(920px,96vw);background:#0c122a;border:1px solid #243064;border-radius:16px;color:var(--ink)}
+    dialog::backdrop{background:rgba(0,10,30,.6);backdrop-filter:blur(3px)}
+    .dlg{padding:16px;display:flex;flex-direction:column;gap:12px}
+    .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+    .btn{border:1px solid #304080;background:#15204a;color:var(--ink);padding:10px 12px;border-radius:12px;cursor:pointer;font-weight:700}
+    .btn[disabled]{opacity:.5;cursor:not-allowed}
+    .btn.primary{background:linear-gradient(180deg,#1f3d92,#1a2c6d);border-color:#2f47a8}
+    .btn.ok{background:#123b2a;border-color:#0d5b3a}
+    .btn.danger{background:#3a1330;border-color:#7a244f}
+    .answer-box{background:#0b1330;border:1px solid #212c5c;border-radius:14px;padding:12px;min-height:56px;white-space:pre-wrap}
+    .score{font-size:36px;font-weight:800}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="pill">청소년지도사 면접 대비</div>
+    <h1>과목 선택 · 질문 버튼 · 음성녹음 · 자동 유사도</h1>
+  </header>
+
+  <div class="wrap">
+    <div class="panel">
+      <div class="toolbar">
+        <label for="subjectSelect" class="stat">과목 선택:</label>
+        <select id="subjectSelect"></select>
+        <div class="counts">
+          <div class="pill" id="countTotal">총수: 0</div>
+          <div class="pill" id="countLearned">습득수: 0</div>
+        </div>
+        <button id="resetProgress" class="btn">진행도 초기화</button>
+        <span id="statText" class="stat"></span>
+      </div>
+      <div id="grid" class="grid"></div>
+    </div>
+  </div>
+
+  <dialog id="qd">
+    <div class="dlg">
+      <h2 id="qTitle">질문</h2>
+      <div class="row">
+        <button id="speakBtn" class="btn">🔊 질문 다시듣기</button>
+        <button id="recordBtn" class="btn">🎤 답변녹음</button>
+        <button id="submitBtn" class="btn primary" disabled>✅ 답변제출</button>
+        <button id="learnedBtn" class="btn ok">📌 습득완료</button>
+        <button id="closeBtn" class="btn danger">❌ 닫기</button>
+      </div>
+      <div>
+        <div class="answer-box" id="userAnswer"></div>
+      </div>
+      <div id="result"></div>
+    </div>
+  </dialog>
+
+  <script>
   let raw = [];
   let data = [];// 작업용(습득완료 제거 반영)
   let currentIdx = null;
   let mediaRecorder, audioChunks = [];
-  let recog = null;           // Web Speech
-  let recognizing = false;
-  let recogFinalText = '';    // 누적 확정 텍스트
+  let recognition; // STT용
 
   // ===== 유틸 =====
   const normSubj = (s)=> (s && String(s).trim()) ? String(s).trim() : '기타';
-  const subjects = ()=> Array.from(new Set(raw.map(x=>normSubj(x.subject)))).sort();
+  function subjects(){ return Array.from(new Set(raw.map(x=>normSubj(x.subject)))).sort(); }
+
+  const FALLBACK_DATA = [
+    { subject: "샘플과목", question: "청소년상담에서 라포의 핵심은?", answer: "진정성, 공감, 존중을 통해 신뢰관계를 형성" },
+    { subject: "샘플과목", question: "청소년 정책의 3대 축은?", answer: "보호, 참여, 발달" }
+  ];
 
   async function loadData(){
+    const notice = document.getElementById('bootNotice');
+    try{
+      notice.style.display='block';
+      notice.textContent = '데이터 불러오는 중…';
+      const r = await fetch('youth_quiz_data.json',{cache:'no-store'});
+      if(!r.ok) throw new Error('데이터 요청 실패');
+      raw = await r.json();
+      if(!Array.isArray(raw) || raw.length===0) throw new Error('데이터가 비어 있습니다');
+      notice.style.display='none';
+    }catch(e){
+      console.warn('데이터 로드 실패, 샘플 데이터로 시작합니다.', e);
+      raw = FALLBACK_DATA.map(x=>({...x}));
+      notice.style.display='block';
+      notice.textContent = '⚠️ youth_quiz_data.json을 불러오지 못하여 샘플 데이터로 실행 중입니다. 저장소 루트에 youth_quiz_data.json을 업로드하세요.';
+    }
+    data = raw.map((x,i)=>({ ...x, _idx:i }));
+    initSubjectSelect();
+    renderBySubject(currentSubject());
+    updateCounts(currentSubject());
+    updateGlobalStat();
+  }{
     try{ const r = await fetch('youth_quiz_data.json',{cache:'no-store'}); raw = await r.json(); }
     catch(e){ raw=[]; }
     data = raw.map((x,i)=>({ ...x, _idx:i }));
@@ -68,73 +174,40 @@
     document.getElementById('qd').showModal();
     speak(q.question);
   }
-  function closeQuestion(){
-    stopRecognition();
-    stopRecording();
-    document.getElementById('qd').close();
-  }
+  function closeQuestion(){ document.getElementById('qd').close(); if(recognition){ recognition.stop(); recognition=null; } }
 
   // ===== 음성 합성 =====
   function speak(txt){ const u = new SpeechSynthesisUtterance(txt); u.lang='ko-KR'; speechSynthesis.cancel(); speechSynthesis.speak(u); }
 
-  // ===== 녹음 + (가능하면) 실시간 인식 =====
-  document.getElementById('recordBtn').onclick = async ()=>{
-    // 1) 녹음
-    const stream = await navigator.mediaDevices.getUserMedia({audio:true});
-    audioChunks=[]; mediaRecorder = new MediaRecorder(stream);
-    mediaRecorder.ondataavailable = e=> audioChunks.push(e.data);
-    mediaRecorder.onstop = ()=>{
-      // 인식 미지원 브라우저면 안내, 지원이면 최종 텍스트를 중복 제거해 정리
-      if(!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)){
-        document.getElementById('userAnswer').textContent = '(브라우저가 실시간 음성 인식을 지원하지 않습니다)';
-      } else {
-        const cleaned = dedupeText(recogFinalText || document.getElementById('userAnswer').textContent);
-        document.getElementById('userAnswer').textContent = cleaned.trim();
-      }
-      document.getElementById('submitBtn').disabled=false;
-    };
-    mediaRecorder.start();
-
-    // 2) 실시간 인식(Web Speech API)
-    startRecognition();
-
-    // 3) 자동 종료(원하면 시간 조정)
-    setTimeout(()=>{ stopRecognition(); stopRecording(); }, 8000);
-  };
-
-  function stopRecording(){
-    try{ if(mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop(); }catch{}
-  }
-
+  // ===== 음성 인식(STT) =====
   function startRecognition(){
-    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if(!SR){ return; }
-    stopRecognition();
-    recog = new SR();
-    recog.lang = 'ko-KR';
-    recog.continuous = true;
-    recog.interimResults = true;
-    recognizing = true; recogFinalText='';
+    window.SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if(!window.SpeechRecognition){ alert('이 브라우저는 음성 인식을 지원하지 않습니다.'); return; }
+    recognition = new SpeechRecognition();
+    recognition.lang = 'ko-KR';
+    recognition.continuous = true;
+    recognition.interimResults = true;
 
-    recog.onresult = (ev)=>{
+    let finalTranscript = '';
+    recognition.onresult = (event)=>{
       let interim = '';
-      for(let i=ev.resultIndex;i<ev.results.length;i++){
-        const res = ev.results[i];
-        if(res.isFinal){ recogFinalText += res[0].transcript + ' '; }
-        else { interim += res[0].transcript + ' '; }
+      for(let i=event.resultIndex;i<event.results.length;i++){
+        const t = event.results[i][0].transcript;
+        if(event.results[i].isFinal){ finalTranscript += t + ' '; }
+        else { interim += t; }
       }
-      const live = (recogFinalText + ' ' + interim).trim();
-      // 실시간 화면 표시 + 즉시 중복어 제거
-      document.getElementById('userAnswer').textContent = dedupeText(live);
+      const combined = (finalTranscript + interim).trim();
+      document.getElementById('userAnswer').textContent = combined;
     };
-    recog.onend = ()=>{ recognizing=false; };
-    try{ recog.start(); }catch{}
+    recognition.onend = ()=>{ document.getElementById('submitBtn').disabled = false; };
+    recognition.start();
   }
 
-  function stopRecognition(){
-    try{ if(recog && recognizing){ recog.stop(); } }catch{}
-    recognizing = false;
-  }
+  // ===== 녹음 버튼 =====
+  document.getElementById('recordBtn').onclick = ()=>{
+    document.getElementById('userAnswer').textContent = '(녹음중...)';
+    startRecognition();
+  };
 
   // ===== 제출 =====
   document.getElementById('submitBtn').onclick = ()=>{
@@ -156,7 +229,7 @@
   };
   document.getElementById('closeBtn').onclick = closeQuestion;
 
-  // ===== 간단 유사도 & 텍스트 정리 =====
+  // ===== 간단 유사도 =====
   function similarity(a,b){
     const sa=new Set(String(a).split(/\s+/).filter(Boolean));
     const sb=new Set(String(b).split(/\s+/).filter(Boolean));
@@ -164,20 +237,6 @@
     return inter/(sa.size+sb.size-inter||1);
   }
   function escapeHtml(s){return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m]));}
-
-  // 연속 중복 토큰 + 2-gram 반복 제거
-  function dedupeText(t){
-    const tokens = String(t||'').replace(/[\\n\\t]+/g,' ').replace(/\\s+/g,' ').trim().split(' ');
-    if(tokens.length<=1) return tokens.join(' ');
-    const out=[]; let prev='';
-    for(const tok of tokens){ if(tok!==prev){ out.push(tok); prev=tok; } }
-    for(let i=0;i<out.length-3;i++){
-      const a=out[i] + ' ' + out[i+1];
-      const b=out[i+2] + ' ' + out[i+3];
-      if(a===b){ out.splice(i+2,2); i--; }
-    }
-    return out.join(' ');
-  }
 
   // ===== 진행도 초기화 =====
   document.getElementById('resetProgress').onclick = ()=>{
@@ -189,6 +248,7 @@
 
   // 시작
   loadData();
-  // 전역 노출
   window.openQuestion = openQuestion;
-</script>
+  </script>
+</body>
+</html>
