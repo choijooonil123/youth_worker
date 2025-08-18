@@ -10,8 +10,9 @@
     body{margin:0;font-family:ui-sans-serif,system-ui,Apple SD Gothic Neo,Noto Sans KR,Segoe UI,Roboto,sans-serif;color:var(--ink);background:radial-gradient(1200px 800px at 80% -10%,#1a2650 0%,#0b1020 45%)}
     header{padding:18px 20px 10px;display:flex;gap:10px;align-items:center}
     .spacer{flex:1}
+    header h1{margin:0;font-size:18px}
     .pill{border:1px solid #28376e;border-radius:999px;color:var(--muted);padding:6px 10px;font-size:12px}
-
+    
     .wrap{max-width:1200px;margin:0 auto;padding:10px 16px 40px}
     .panel{border:1px solid #263062;border-radius:16px;background:linear-gradient(180deg,rgba(255,255,255,.03),rgba(255,255,255,0));box-shadow:0 10px 40px rgba(0,0,0,.35)}
     .toolbar{display:flex;gap:10px;align-items:center;padding:14px;border-bottom:1px solid #283162;flex-wrap:wrap}
@@ -37,12 +38,12 @@
     .answer-box{background:#0b1330;border:1px solid #212c5c;border-radius:14px;padding:12px;min-height:56px;white-space:pre-wrap}
     textarea{width:100%;background:#0b1330;color:var(--ink);border:1px solid #212c5c;border-radius:14px;padding:8px;resize:vertical;min-height:80px}
     .score{font-size:36px;font-weight:800}
-    .muted{color:#a7b3d4;opacity:.85}
   </style>
 </head>
 <body>
   <header>
     <div class="pill">청소년지도사 면접 대비</div>
+    <h1>로그인 및 학습 시스템</h1>
     <div class="spacer"></div>
     <div id="headerRank" class="pill" style="display:none"></div>
     <div id="headerUser" class="pill" style="display:none"></div>
@@ -50,25 +51,16 @@
   </header>
 
   <div class="wrap">
-    <!-- 로그인 패널 -->
     <div id="loginPanel" class="panel">
       <div style="padding:20px;display:flex;flex-direction:column;gap:12px">
         <h2>로그인</h2>
         <input id="username" placeholder="사용자 이름" style="padding:8px;border-radius:6px;border:1px solid #2b3769;background:#0f1633;color:var(--ink)">
         <input id="password" type="password" placeholder="비밀번호" style="padding:8px;border-radius:6px;border:1px solid #2b3769;background:#0f1633;color:var(--ink)">
-        <button id="loginBtn" class="btn primary">로그인 / 가입</button>
-        <div class="muted">동일한 아이디로 다시 로그인하면 이전의 학습 진행이 이어집니다.</div>
-        <div id="rankTableWrap" style="margin-top:20px">
-          <h3>학습 순위</h3>
-          <table style="width:100%;border-collapse:collapse;font-size:14px">
-            <thead><tr><th style="text-align:left;border-bottom:1px solid #1f2a55;padding:8px">순위</th><th style="text-align:left;border-bottom:1px solid #1f2a55;padding:8px">사용자</th><th style="text-align:left;border-bottom:1px solid #1f2a55;padding:8px">습득수</th></tr></thead>
-            <tbody id="rankTbody"></tbody>
-          </table>
-        </div>
+        <button id="loginBtn" class="btn primary">로그인</button>
+        <div id="rankList" style="margin-top:20px"></div>
       </div>
     </div>
 
-    <!-- 메인 패널 -->
     <div id="mainPanel" class="panel" style="display:none">
       <div class="toolbar">
         <button id="resetProgress" class="btn">초기화</button>
@@ -78,18 +70,12 @@
           <div class="pill" id="countTotal">총수: 0</div>
           <div class="pill" id="countLearned">습득수: 0</div>
         </div>
-        <div style="margin-left:auto;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-          <input id="addQ" placeholder="새 질문" style="border:1px solid #2b3769;background:#0f1633;color:var(--ink);padding:8px 10px;border-radius:10px;min-width:240px"/>
-          <input id="addA" placeholder="정답(모범답안)" style="border:1px solid #2b3769;background:#0f1633;color:var(--ink);padding:8px 10px;border-radius:10px;min-width:240px"/>
-          <button id="addBtn" class="btn">+ 추가</button>
-        </div>
+        <button id="addQuestionBtn" class="btn">새 질문 추가</button>
       </div>
-      <div id="bootNotice" class="muted" style="padding:8px 14px"></div>
       <div id="grid" class="grid"></div>
     </div>
   </div>
 
-  <!-- 질문 모달 -->
   <dialog id="qd">
     <div class="dlg">
       <h2 id="qTitle">질문</h2>
@@ -97,359 +83,327 @@
         <button id="speakBtn" class="btn">🔊 질문 다시듣기</button>
         <button id="recordBtn" class="btn">🎤 답변녹음</button>
         <button id="submitBtn" class="btn primary">✅ 답변완료</button>
-        <button id="learnedBtn" class="btn ok">📌 습득완료</button>
+        <button id="addAnswerBtn" class="btn">➕ 답변 추가</button>
         <button id="deleteQuestionBtn" class="btn danger">🗑 질문 삭제</button>
+        <button id="learnedBtn" class="btn ok">📌 습득완료</button>
         <button id="closeBtn" class="btn danger">❌ 닫기</button>
       </div>
-      <div><div class="answer-box" id="userAnswer"></div></div>
-      <div id="result"></div>
-
-      <div style="margin-top:10px">
-        <h3 style="margin:10px 0 6px">이 문항의 정답(여러 개 관리)</h3>
-        <div id="answerList" class="answer-box" style="min-height:0"></div>
-        <div class="row" style="align-items:flex-start">
-          <textarea id="newAns" rows="4" placeholder="이 문항에 새로운 정답(변형)을 입력하세요"></textarea>
-          <button id="addAnsBtn" class="btn">정답 추가</button>
-        </div>
-        <div class="muted">라디오로 선택된 정답이 이후 비교 및 음성 출력에 사용됩니다. (🗑로 개별 정답 삭제 가능)</div>
+      <div>
+        <div class="answer-box" id="userAnswer"></div>
       </div>
+      <div id="result"></div>
+      <div id="extraAnswers"></div>
     </div>
   </dialog>
 
   <script>
-  /* ===== 저장소 키 ===== */
-  const LS_USERS_KEY='yj_users_v2';          // { username: { pass: '***' } }
-  const LS_PROGRESS_KEY='yj_progress_v2';    // { username: { learnedIds: [...] } }
+    // ===== 저장 키 =====
+    // 모든 사용자에게 공유되는 문제/정답 저장
+    const STORAGE_KEY = 'yj_shared_data_v2';
+    // 사용자별 습득 진행도 저장
+    const PROGRESS_KEY = 'yj_progress_v2';
 
-  /* ===== 전역 상태 ===== */
-  let raw = [];     // 원본(전체 문항)
-  let data = [];    // 화면용(필터/가공)
-  let currentIdx = null; // 현재 보는 문항의 내부 index(_idx)
-  let recognition = null;
-  let currentUser = null;
+    // ===== 전역 상태 =====
+    let raw = [];          // 전체 문제(기본 JSON + 공유 문제 병합, 중복 제거)
+    let data = [];         // 화면 표시용(로그인 사용자의 습득 문항 제외)
+    let currentUser = null;
+    let currentIdx = null; // raw의 _idx
+    let recognition = null;
 
-  /* ===== 유틸 ===== */
-  const normSubj = s => (s && String(s).trim()) ? String(s).trim() : '기타';
-  const qId = q => `${normSubj(q.subject)}::${q.question}`; // 문항 고유 문자열 ID
-  const escapeHtml = s => String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m]));
+    // ===== 유틸 =====
+    const normSubj = s => (s && String(s).trim()) ? String(s).trim() : '기타';
+    const esc = s => String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m]));
+    const qId = q => `${normSubj(q.subject)}::${q.question}`;
 
-  /* ===== 로컬스토리지 유틸 ===== */
-  const loadUsers = () => { try { return JSON.parse(localStorage.getItem(LS_USERS_KEY)||'{}'); } catch { return {}; } };
-  const saveUsers = obj => localStorage.setItem(LS_USERS_KEY, JSON.stringify(obj));
-  const loadProgress = () => { try { return JSON.parse(localStorage.getItem(LS_PROGRESS_KEY)||'{}'); } catch { return {}; } };
-  const saveProgress = obj => localStorage.setItem(LS_PROGRESS_KEY, JSON.stringify(obj));
+    function loadShared(){ try{return JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]');}catch{return []} }
+    function saveShared(arr){ localStorage.setItem(STORAGE_KEY, JSON.stringify(arr)); }
+    function loadProgress(){ try{return JSON.parse(localStorage.getItem(PROGRESS_KEY)||'{}');}catch{return {}} }
+    function saveProgress(obj){ localStorage.setItem(PROGRESS_KEY, JSON.stringify(obj)); }
 
-  const ensureUser = (username, password) => {
-    const users = loadUsers();
-    if (!users[username]) users[username] = { pass: password };
-    saveUsers(users);
-    const prog = loadProgress();
-    if (!prog[username]) prog[username] = { learnedIds: [] };
-    saveProgress(prog);
-  };
-  const authUser = (username, password) => {
-    const users = loadUsers();
-    if (!users[username]) return { ok: true, newUser: true }; // 신규 가입 허용
-    if (users[username].pass === password) return { ok: true, newUser: false };
-    return { ok: false, msg: '비밀번호가 올바르지 않습니다.' };
-  };
-
-  /* ===== 데이터 로드 ===== */
-  const FALLBACK_DATA = [
-    { subject: '샘플과목', question: '청소년상담에서 라포의 핵심은?', answer: '진정성, 공감, 존중을 통해 신뢰관계를 형성' },
-    { subject: '샘플과목', question: '청소년 정책의 3대 축은?', answer: '보호, 참여, 발달' }
-  ];
-
-  async function loadData() {
-    const notice = document.getElementById('bootNotice');
-    try {
-      notice.textContent = '데이터 불러오는 중…';
-      const r = await fetch('youth_quiz_data.json', { cache: 'no-store' });
-      if (!r.ok) throw new Error('데이터 요청 실패');
-      raw = await r.json();
-      if (!Array.isArray(raw) || raw.length === 0) throw new Error('데이터가 비어 있습니다');
-      notice.textContent = '';
-    } catch (e) {
-      console.warn('데이터 로드 실패, 샘플 데이터로 시작', e);
-      raw = FALLBACK_DATA.map(x => ({ ...x }));
-      notice.textContent = '⚠️ youth_quiz_data.json을 불러오지 못하여 샘플 데이터로 실행 중입니다.';
+    // ===== 순위/헤더 =====
+    function renderRanks(){
+      const p = loadProgress();
+      const rows = Object.keys(p).map(u=>({u, c:(p[u]?.learnedIds||[]).length})).sort((a,b)=>b.c-a.c).slice(0,50);
+      const div = document.getElementById('rankList');
+      if(!div) return;
+      div.innerHTML = '<h3>습득 순위</h3>' + (rows.map((r,i)=>`<div>${i+1}. ${esc(r.u)} : ${r.c}</div>`).join('') || '<div style="opacity:.7">아직 데이터가 없습니다</div>');
     }
-    // 정규화: answers 배열/active 주입 + _idx + _id
-    raw = raw.map((x, i) => ({
-      ...x,
-      _idx: i,
-      _id: qId(x),
-      answers: Array.isArray(x.answers) ? x.answers.filter(Boolean) : [(x.answer||'')].filter(Boolean),
-      active: (typeof x.active === 'number' ? x.active : 0)
-    }));
-    applyUserFilterAndRender();
-  }
-
-  /* ===== 사용자 진행 반영 후 렌더 ===== */
-  function applyUserFilterAndRender() {
-    const prog = loadProgress();
-    const learned = currentUser ? new Set((prog[currentUser]?.learnedIds)||[]) : new Set();
-    data = raw.map(x => ({ ...x })) // 복제
-              .filter(q => !learned.has(q._id));
-    initSubjectSelect();
-    renderBySubject(currentSubject());
-    updateCounts(currentSubject());
-    updateHeaderUser();
-    updateLeaderboardTable();
-  }
-
-  /* ===== 과목 선택 ===== */
-  function subjects() { return Array.from(new Set(raw.map(x => normSubj(x.subject)))).sort(); }
-  function initSubjectSelect() {
-    const sel = document.getElementById('subjectSelect');
-    sel.innerHTML = subjects().map(s=>`<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`).join('');
-    if (subjects().length) sel.value = subjects()[0];
-    sel.onchange = () => { renderBySubject(currentSubject()); updateCounts(currentSubject()); };
-    document.getElementById('addBtn').onclick = addNewQA;
-  }
-  function currentSubject() {
-    const sel = document.getElementById('subjectSelect');
-    return sel && sel.value ? sel.value : (subjects()[0]||'기타');
-  }
-
-  function renderBySubject(subj) {
-    const grid = document.getElementById('grid');
-    const list = data.filter(x=>normSubj(x.subject)===subj)
-      .map(q=>`<button class="qbtn" onclick="openQuestion(${q._idx})" title="${escapeHtml(q.question)}">${escapeHtml(q.question)}</button>`).join('');
-    grid.innerHTML = list || `<div style="padding:12px;opacity:.7">이 과목의 남은 문항이 없습니다.</div>`;
-  }
-
-  function updateCounts(subj) {
-    const prog = loadProgress();
-    const learned = currentUser ? new Set((prog[currentUser]?.learnedIds)||[]) : new Set();
-    const total = raw.filter(x=>normSubj(x.subject)===subj).length;
-    const learnedCount = raw.filter(x=>normSubj(x.subject)===subj && learned.has(x._id)).length;
-    document.getElementById('countTotal').textContent = `총수: ${total}`;
-    document.getElementById('countLearned').textContent = `습득수: ${learnedCount}`;
-  }
-
-  /* ===== 로그인 / 로그아웃 ===== */
-  function updateHeaderUser() {
-    const headerUser = document.getElementById('headerUser');
-    const headerRank = document.getElementById('headerRank');
-    const btnLogout  = document.getElementById('logoutBtn');
-    if (!currentUser) {
-      headerUser.style.display='none'; headerRank.style.display='none'; btnLogout.style.display='none';
-      return;
+    function updateHeaderUser(){
+      const rankEl=document.getElementById('headerRank');
+      const userEl=document.getElementById('headerUser');
+      const lo=document.getElementById('logoutBtn');
+      if(!currentUser){ rankEl.style.display='none'; userEl.style.display='none'; lo.style.display='none'; return; }
+      const p=loadProgress(); const my=(p[currentUser]?.learnedIds||[]).length;
+      const rows=Object.keys(p).map(u=>({u,c:(p[u]?.learnedIds||[]).length})).sort((a,b)=>b.c-a.c);
+      const idx = rows.findIndex(x=>x.u===currentUser);
+      rankEl.textContent = `순위: ${idx>=0? (idx+1)+'위' : '-'} · 습득수: ${my}`;
+      userEl.textContent  = `사용자: ${currentUser}`;
+      rankEl.style.display='inline-block'; userEl.style.display='inline-block'; lo.style.display='inline-block';
     }
-    const prog = loadProgress();
-    const learnedCnt = (prog[currentUser]?.learnedIds||[]).length;
-    // 순위 계산
-    const users = Object.keys(loadUsers());
-    const ranks = users.map(u=>({u, c:(prog[u]?.learnedIds||[]).length}))
-                       .sort((a,b)=>b.c-a.c);
-    const rankIndex = ranks.findIndex(r=>r.u===currentUser);
-    const rankText = (rankIndex>=0) ? `${rankIndex+1}위` : '-';
-    headerUser.textContent = `사용자: ${currentUser}`;
-    headerRank.textContent = `순위: ${rankText} · 습득수: ${learnedCnt}`;
-    headerUser.style.display='inline-block';
-    headerRank.style.display='inline-block';
-    btnLogout.style.display='inline-block';
-  }
 
-  function updateLeaderboardTable() {
-    const prog = loadProgress();
-    const tbody = document.getElementById('rankTbody');
-    const users = Object.keys(loadUsers());
-    const sorted = users.map(u=>({u, c:(prog[u]?.learnedIds||[]).length}))
-                        .sort((a,b)=>b.c-a.c).slice(0,50);
-    tbody.innerHTML = sorted.map((r,i)=>`<tr>
-      <td style="border-bottom:1px solid #1f2a55;padding:8px">${i+1}</td>
-      <td style="border-bottom:1px solid #1f2a55;padding:8px">${r.u}</td>
-      <td style="border-bottom:1px solid #1f2a55;padding:8px">${r.c}</td>
-    </tr>`).join('') || `<tr><td colspan="3" style="padding:8px;opacity:.7">아직 데이터가 없습니다</td></tr>`;
-  }
+    // ===== 데이터 로드 / 병합 =====
+    const FALLBACK = [
+      { subject:'샘플과목', question:'청소년상담에서 라포의 핵심은?', answer:'진정성, 공감, 존중을 통해 신뢰관계를 형성' },
+      { subject:'샘플과목', question:'청소년 정책의 3대 축은?', answer:'보호, 참여, 발달' }
+    ];
 
-  document.getElementById('loginBtn').onclick = () => {
-    const u = document.getElementById('username').value.trim();
-    const p = document.getElementById('password').value;
-    if(!u || !p) { alert('이름과 비밀번호를 입력하세요.'); return; }
-    const r = authUser(u,p);
-    if(!r.ok) { alert(r.msg); return; }
-    ensureUser(u,p);
-    currentUser = u;
-    document.getElementById('loginPanel').style.display='none';
-    document.getElementById('mainPanel').style.display='block';
-    applyUserFilterAndRender();
-  };
+    async function loadBase(){
+      try{
+        const r = await fetch('youth_quiz_data.json',{cache:'no-store'});
+        if(!r.ok) throw 0;
+        const j = await r.json();
+        return Array.isArray(j)&&j.length ? j : FALLBACK;
+      }catch{ return FALLBACK; }
+    }
+    function standardize(base){
+      return base.map(x=>({
+        subject: normSubj(x.subject),
+        question: x.question,
+        answers: Array.isArray(x.answers)? x.answers.filter(Boolean) : [(x.answer||'')].filter(Boolean),
+        active: (typeof x.active==='number'? x.active:0)
+      }));
+    }
+    function mergeWithShared(baseStd){
+      const map = new Map();
+      baseStd.forEach(q=> map.set(qId(q), {...q}) );
+      const shared = loadShared();
+      (Array.isArray(shared)? shared : []).forEach(q=>{
+        const id = qId(q);
+        if(map.has(id)){
+          const cur = map.get(id);
+          const add = (q.answers||[]).filter(Boolean);
+          cur.answers = [...new Set([...(cur.answers||[]), ...add])];
+        }else{
+          map.set(id,{ subject:normSubj(q.subject), question:q.question, answers:(q.answers||[]).filter(Boolean), active:(q.active||0) });
+        }
+      });
+      raw = Array.from(map.values()).map((q,i)=> ({...q, _idx:i}));
+    }
 
-  document.getElementById('logoutBtn').onclick = () => {
-    currentUser = null;
-    document.getElementById('mainPanel').style.display='none';
-    document.getElementById('loginPanel').style.display='block';
-    updateLeaderboardTable();
-    updateHeaderUser();
-  };
+    // ===== 사용자별 습득 필터 및 렌더 =====
+    function applyLearnedFilterForCurrentUser(){
+      const p = loadProgress();
+      const learned = currentUser ? new Set((p[currentUser]?.learnedIds)||[]) : new Set();
+      data = raw.filter(q=> !learned.has(qId(q))).map(q=>({...q}));
+    }
 
-  /* ===== 초기화(현재 사용자 진행도 리셋) ===== */
-  document.getElementById('resetProgress').onclick = () => {
-    if(!currentUser){ alert('로그인 후 사용하세요.'); return; }
-    const prog = loadProgress();
-    prog[currentUser] = { learnedIds: [] };
-    saveProgress(prog);
-    applyUserFilterAndRender();
-  };
+    function subjects(){ return Array.from(new Set(raw.map(x=>normSubj(x.subject)))).sort(); }
+    function initSubjectSelect(){
+      const sel = document.getElementById('subjectSelect');
+      const subs = subjects();
+      sel.innerHTML = subs.map(s=>`<option value="${esc(s)}">${esc(s)}</option>`).join('');
+      if(subs.length) sel.value=subs[0];
+      sel.onchange = ()=>{ renderBySubject(currentSubject()); };
+    }
+    function currentSubject(){ const sel=document.getElementById('subjectSelect'); return sel&&sel.value?sel.value:(subjects()[0]||'기타'); }
+    function renderBySubject(subj){
+      const grid=document.getElementById('grid');
+      const list = data.filter(x=>normSubj(x.subject)===subj)
+                       .map(q=>`<button class="qbtn" onclick="openQuestion(${q._idx})" title="${esc(q.question)}">${esc(q.question)}</button>`).join('');
+      grid.innerHTML = list || `<div style="padding:12px;opacity:.7">이 과목의 남은 문항이 없습니다.</div>`;
+    }
 
-  /* ===== 질문 추가/삭제 ===== */
-  function addNewQA(){
-    const subj = currentSubject();
-    const q = document.getElementById('addQ').value.trim();
-    const a = document.getElementById('addA').value.trim();
-    if(!q || !a){ alert('질문과 정답을 모두 입력하세요.'); return; }
-    const idx = raw.length;
-    const item = { subject: subj, question: q, answers: [a], active: 0, _idx: idx, _id: `${normSubj(subj)}::${q}` };
-    raw.push(item);
-    // 현재 사용자 진행 반영된 data에도 추가 (아직 학습 전이므로 표시)
-    data.push({...item});
-    document.getElementById('addQ').value='';
-    document.getElementById('addA').value='';
-    renderBySubject(subj); updateCounts(subj);
-  }
+    // ===== 카운트(요구사항) =====
+    // 총수: 전체 문제 수(raw 전체)
+    // 습득수: 과목 무관, 로그인 사용자의 누적 습득 수
+    function updateCounts(){
+      const totalAll = raw.length;
+      const p = loadProgress();
+      const learnedCnt = currentUser ? ((p[currentUser]?.learnedIds||[]).length) : 0;
+      document.getElementById('countTotal').textContent   = `총수: ${totalAll}`;
+      document.getElementById('countLearned').textContent = `습득수: ${learnedCnt}`;
+    }
 
-  document.getElementById('deleteQuestionBtn').onclick = () => {
-    const subj = currentSubject();
-    const target = raw.find(x=>x._idx===currentIdx);
-    if(!target){ closeQuestion(); return; }
-    // raw/data에서 제거
-    raw = raw.filter(x=>x._idx!==currentIdx);
-    data = data.filter(x=>x._idx!==currentIdx);
-    closeQuestion();
-    renderBySubject(subj);
-    updateCounts(subj);
-  };
-
-  /* ===== 질문 모달 ===== */
-  function openQuestion(idx){
-    currentIdx = idx;
-    const q = raw.find(x=>x._idx===idx);
-    if(!q){ return; }
-    document.getElementById('qTitle').textContent = q.question;
-    document.getElementById('userAnswer').textContent = '';
-    document.getElementById('result').innerHTML = '';
-    renderAnswerList();
-    document.getElementById('qd').showModal();
-    speak(q.question);
-  }
-  function closeQuestion(){ if(recognition){ recognition.stop(); recognition=null; } document.getElementById('qd').close(); }
-  window.openQuestion = openQuestion;
-
-  /* ===== 음성 합성 ===== */
-  function speak(txt){ const u = new SpeechSynthesisUtterance(txt); u.lang='ko-KR'; speechSynthesis.cancel(); speechSynthesis.speak(u); }
-  document.getElementById('speakBtn').onclick = () => {
-    const q = raw.find(x=>x._idx===currentIdx); if(q) speak(q.question);
-  };
-
-  /* ===== 음성 인식(STT) ===== */
-  function startRecognition(){
-    window.SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if(!window.SpeechRecognition){ alert('이 브라우저는 음성 인식을 지원하지 않습니다.'); return; }
-    recognition = new SpeechRecognition();
-    recognition.lang = 'ko-KR';
-    recognition.continuous = true;
-    recognition.interimResults = true;
-    let finalTranscript = '';
-    recognition.onresult = (event)=>{
-      let interim = '';
-      for(let i=event.resultIndex;i<event.results.length;i++){
-        const t = event.results[i][0].transcript;
-        if(event.results[i].isFinal){ finalTranscript += t + ' '; }
-        else { interim += t; }
-      }
-      const combined = (finalTranscript + interim).trim();
-      document.getElementById('userAnswer').textContent = combined;
+    // ===== 로그인/로그아웃/초기화 =====
+    document.getElementById('loginBtn').onclick = async ()=>{
+      const name=document.getElementById('username').value.trim();
+      const pass=document.getElementById('password').value;
+      if(!name||!pass){ alert('이름과 비밀번호를 입력하세요.'); return; }
+      currentUser = name;
+      const p=loadProgress(); if(!p[currentUser]){ p[currentUser]={learnedIds:[]}; saveProgress(p); }
+      document.getElementById('loginPanel').style.display='none';
+      document.getElementById('mainPanel').style.display='block';
+      await bootstrap();
     };
-    recognition.start();
-  }
-  document.getElementById('recordBtn').onclick = ()=>{
-    document.getElementById('userAnswer').textContent = '(녹음중...)';
-    startRecognition();
-  };
+    document.getElementById('logoutBtn').onclick = ()=>{
+      currentUser=null;
+      document.getElementById('mainPanel').style.display='none';
+      document.getElementById('loginPanel').style.display='block';
+      renderRanks(); updateHeaderUser();
+    };
+    document.getElementById('resetProgress').onclick = ()=>{
+      if(!currentUser){ alert('로그인 후 사용하세요.'); return; }
+      const p=loadProgress(); p[currentUser]={learnedIds:[]}; saveProgress(p);
+      applyLearnedFilterForCurrentUser();
+      renderBySubject(currentSubject());
+      updateCounts();
+      renderRanks();
+      updateHeaderUser();
+    };
 
-  /* ===== 답변완료 ===== */
-  document.getElementById('submitBtn').onclick = ()=>{
-    const q = raw.find(x=>x._idx===currentIdx);
-    const user = document.getElementById('userAnswer').textContent;
-    const gold = q.answers[q.active||0] || '';
-    const sim = similarity(user, gold);
-    document.getElementById('result').innerHTML = `<div class='answer-box'>${escapeHtml(gold)}</div><div class='score'>유사도 ${(sim*100).toFixed(1)}%</div>`;
-    speak('정답입니다. ' + gold);
-  };
+    // ===== 질문 열기/닫기 =====
+    function openQuestion(idx){
+      currentIdx = idx;
+      const q = raw.find(x=>x._idx===idx); if(!q) return;
+      document.getElementById('qTitle').textContent = q.question;
+      document.getElementById('userAnswer').textContent = '';
+      document.getElementById('result').innerHTML = '';
+      renderAnswerList();
+      document.getElementById('qd').showModal();
+      speak(q.question);
+    }
+    function closeQuestion(){ if(recognition){ recognition.stop(); recognition=null; } document.getElementById('qd').close(); }
+    window.openQuestion = openQuestion;
+    document.getElementById('closeBtn').onclick = closeQuestion;
 
-  /* ===== 정답(여러 개) 관리 ===== */
-  function renderAnswerList(){
-    const box = document.getElementById('answerList');
-    const q = raw.find(x=>x._idx===currentIdx);
-    box.innerHTML = (q.answers||[]).map((ans,i)=>{
-      const checked = (q.active||0)===i ? 'checked' : '';
-      return `<label style="display:flex;gap:8px;align-items:flex-start;margin:6px 0">
-        <input type="radio" name="ansPick" value="${i}" ${checked} style="margin-top:4px"/>
-        <div style="flex:1">${escapeHtml(ans)}</div>
-        <button type="button" class="btn danger" data-del-ans="${i}">🗑</button>
-      </label>`;
-    }).join('') || '<div style="opacity:.7">등록된 정답이 없습니다.</div>';
+    // ===== 음성 합성/인식 =====
+    function speak(txt){ const u=new SpeechSynthesisUtterance(txt); u.lang='ko-KR'; speechSynthesis.cancel(); speechSynthesis.speak(u); }
+    document.getElementById('speakBtn').onclick = ()=>{ const q=raw.find(x=>x._idx===currentIdx); if(q) speak(q.question); };
 
-    // 선택 변경
-    box.querySelectorAll('input[name="ansPick"]').forEach(r=>{
-      r.addEventListener('change',(e)=>{
-        raw.find(x=>x._idx===currentIdx).active = parseInt(e.target.value,10)||0;
+    function startRecognition(){
+      window.SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if(!window.SpeechRecognition){ alert('이 브라우저는 음성 인식을 지원하지 않습니다.'); return; }
+      recognition = new SpeechRecognition();
+      recognition.lang='ko-KR'; recognition.continuous=true; recognition.interimResults=true;
+      let finalTranscript='';
+      recognition.onresult = (event)=>{
+        let interim='';
+        for(let i=event.resultIndex;i<event.results.length;i++){
+          const t=event.results[i][0].transcript;
+          if(event.results[i].isFinal){ finalTranscript += t + ' '; } else { interim += t; }
+        }
+        document.getElementById('userAnswer').textContent = (finalTranscript+interim).trim();
+      };
+      recognition.start();
+    }
+    document.getElementById('recordBtn').onclick = ()=>{
+      document.getElementById('userAnswer').textContent='(녹음중...)';
+      startRecognition();
+    };
+
+    // ===== 유사도 & 답변완료 =====
+    function similarity(a,b){
+      const sa=new Set(String(a).split(/\s+/).filter(Boolean));
+      const sb=new Set(String(b).split(/\s+/).filter(Boolean));
+      let inter=0; sa.forEach(w=>{ if(sb.has(w)) inter++; });
+      return inter/(sa.size+sb.size-inter||1);
+    }
+    document.getElementById('submitBtn').onclick = ()=>{
+      const q = raw.find(x=>x._idx===currentIdx); if(!q) return;
+      const gold = (q.answers&&q.answers.length)? (q.answers[q.active||0]||q.answers[0]) : '';
+      const user = document.getElementById('userAnswer').textContent;
+      const sim = similarity(user, gold);
+      document.getElementById('result').innerHTML = `<div class='answer-box'>${esc(gold)}</div><div class='score'>유사도 ${(sim*100).toFixed(1)}%</div>`;
+      speak('정답입니다. ' + gold);
+    };
+
+    // ===== 습득완료 =====
+    document.getElementById('learnedBtn').onclick = ()=>{
+      if(!currentUser){ alert('로그인 후 사용하세요.'); return; }
+      const q = raw.find(x=>x._idx===currentIdx); if(!q) return;
+      const p = loadProgress(); p[currentUser]=p[currentUser]||{learnedIds:[]};
+      const id = qId(q);
+      if(!p[currentUser].learnedIds.includes(id)) p[currentUser].learnedIds.push(id);
+      saveProgress(p);
+      closeQuestion();
+      applyLearnedFilterForCurrentUser();
+      renderBySubject(currentSubject());
+      updateCounts();
+      renderRanks();
+      updateHeaderUser();
+    };
+
+    // ===== 정답 목록 렌더 & 공유 추가/삭제 =====
+    function renderAnswerList(){
+      const holder = document.getElementById('extraAnswers');
+      const q = raw.find(x=>x._idx===currentIdx); if(!q){ holder.innerHTML=''; return; }
+      const items = (q.answers||[]).map((ans,i)=>{
+        const checked = (q.active||0)===i ? 'checked' : '';
+        return `<div style="display:flex;gap:8px;align-items:flex-start;margin:6px 0">
+          <input type="radio" name="ansPick" value="${i}" ${checked} style="margin-top:4px"/>
+          <div style="flex:1">${esc(ans)}</div>
+          <button class="btn danger" data-del-ans="${i}">🗑</button>
+        </div>`;
+      }).join('') || '<div style="opacity:.7">등록된 정답이 없습니다.</div>';
+      holder.innerHTML = `<h3 style="margin:10px 0 6px">정답 목록</h3>` + items;
+
+      // 선택 변경
+      holder.querySelectorAll('input[name="ansPick"]').forEach(r=>{
+        r.addEventListener('change',(e)=>{ q.active = parseInt(e.target.value,10)||0; });
       });
-    });
-    // 개별 삭제
-    box.querySelectorAll('[data-del-ans]').forEach(btn=>{
-      btn.addEventListener('click',()=>{
-        const i = parseInt(btn.getAttribute('data-del-ans'),10);
-        const q = raw.find(x=>x._idx===currentIdx);
-        q.answers.splice(i,1);
-        if((q.active||0)>=q.answers.length){ q.active=Math.max(0,q.answers.length-1); }
-        renderAnswerList();
+      // 개별 삭제(공유 반영)
+      holder.querySelectorAll('[data-del-ans]').forEach(btn=>{
+        btn.addEventListener('click',()=>{
+          const i = parseInt(btn.getAttribute('data-del-ans'),10);
+          q.answers.splice(i,1);
+          if((q.active||0)>=q.answers.length) q.active=Math.max(0,q.answers.length-1);
+          const bank=loadShared();
+          const idx=bank.findIndex(it=> qId(it)===qId(q));
+          if(idx>=0){ bank[idx].answers = q.answers.slice(); saveShared(bank); }
+          renderAnswerList();
+        });
       });
-    });
+    }
 
-    // 새 정답 추가
-    document.getElementById('addAnsBtn').onclick = ()=>{
-      const val = (document.getElementById('newAns').value||'').trim();
-      if(!val) return;
-      const q = raw.find(x=>x._idx===currentIdx);
-      q.answers.push(val);
-      q.active = q.answers.length-1; // 방금 추가한 것 사용
-      document.getElementById('newAns').value='';
+    document.getElementById('addAnswerBtn').onclick = ()=>{
+      const q = raw.find(x=>x._idx===currentIdx); if(!q) return;
+      const val = prompt('추가할 정답(변형)을 입력하세요'); if(!val) return;
+      q.answers = q.answers || [];
+      if(!q.answers.includes(val)) q.answers.push(val);
+      q.active = q.answers.length-1;
+      // 공유 반영
+      const bank = loadShared();
+      const idx  = bank.findIndex(it=> qId(it)===qId(q));
+      if(idx>=0){
+        const arr = Array.isArray(bank[idx].answers)? bank[idx].answers : [];
+        if(!arr.includes(val)) arr.push(val);
+        bank[idx].answers = arr;
+      }else{
+        bank.push({ subject:q.subject, question:q.question, answers:[val], active:0 });
+      }
+      saveShared(bank);
       renderAnswerList();
     };
-  }
 
-  /* ===== 습득완료 ===== */
-  document.getElementById('learnedBtn').onclick = ()=>{
-    if(!currentUser){ alert('로그인 후 사용하세요.'); return; }
-    const q = raw.find(x=>x._idx===currentIdx);
-    const prog = loadProgress();
-    prog[currentUser] = prog[currentUser] || { learnedIds: [] };
-    if(!prog[currentUser].learnedIds.includes(q._id)){
-      prog[currentUser].learnedIds.push(q._id);
-      saveProgress(prog);
+    // ===== 새 질문 추가(모든 사용자 공유) =====
+    document.getElementById('addQuestionBtn').onclick = ()=>{
+      const subj = prompt('과목명을 입력하세요'); if(!subj) return;
+      const ques = prompt('새 질문을 입력하세요'); if(!ques) return;
+      const answ = prompt('정답(모범답안)을 입력하세요'); if(!answ) return;
+      const bank = loadShared();
+      const id = `${normSubj(subj)}::${ques}`;
+      const exists = bank.some(x=> `${normSubj(x.subject)}::${x.question}`===id) || raw.some(x=> qId(x)===id);
+      if(exists){ alert('이미 존재하는 문항입니다.'); return; }
+      bank.push({ subject:normSubj(subj), question:ques, answers:[answ], active:0 });
+      saveShared(bank);
+      bootstrap(); // 전체 새로 병합/렌더
+    };
+
+    // ===== 질문 삭제(공유로 추가된 문항만 전역 삭제) =====
+    document.getElementById('deleteQuestionBtn').onclick = ()=>{
+      const q=raw.find(x=>x._idx===currentIdx); if(!q) return;
+      if(!confirm('이 질문을 모든 사용자에게서 삭제하시겠습니까? (공유로 추가된 문항만 삭제됩니다)')) return;
+      const bank=loadShared();
+      const idx=bank.findIndex(it=> qId(it)===qId(q));
+      if(idx>=0){ bank.splice(idx,1); saveShared(bank); alert('공유 문항을 삭제했습니다.'); bootstrap(); }
+      else { alert('기본 데이터 문항은 전역 삭제할 수 없습니다.'); }
+    };
+
+    // ===== 부트스트랩 =====
+    async function bootstrap(){
+      const base = await loadBase();
+      const std  = standardize(base);
+      mergeWithShared(std);
+      applyLearnedFilterForCurrentUser();
+      initSubjectSelect();
+      renderBySubject(currentSubject());
+      updateCounts();
+      renderRanks();
+      updateHeaderUser();
     }
-    closeQuestion();
-    applyUserFilterAndRender(); // 목록/카운트/헤더/랭킹 갱신
-  };
 
-  /* ===== 유사도(토큰 교집합 Jaccard) ===== */
-  function similarity(a,b){
-    const sa=new Set(String(a).split(/\s+/).filter(Boolean));
-    const sb=new Set(String(b).split(/\s+/).filter(Boolean));
-    let inter=0; sa.forEach(w=>{ if(sb.has(w)) inter++; });
-    return inter/(sa.size+sb.size-inter||1);
-  }
-
-  /* ===== 부팅 ===== */
-  (async function(){
-    await loadData();
-    updateLeaderboardTable();
-    // 자동 로그인 복원(선택사항): 최근 로그인 사용자 저장을 원하시면 여기에 저장/복원 로직 추가 가능
-  })();
+    // 초기 진입: 순위만 렌더
+    renderRanks();
   </script>
 </body>
 </html>
